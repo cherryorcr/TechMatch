@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>海小智 - 海尔科技合作智能体</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+        }
+
+        :root {
+            --primary: #0052cc;
+            --primary-hover: #003d99;
+            --bg-light: #f0f4ff;
+            --card-radius: 20px;
+            --text-main: #1a202c;
+            --text-secondary: #6b7280;
+            --text-desc: #9ca3af;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8f0ff 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* 头部 */
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            width: 64px;
+            height: 64px;
+            background: var(--primary);
+            border-radius: 18px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-shape {
+            width: 32px;
+            height: 28px;
+            position: relative;
+        }
+
+        .logo-shape::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 6px;
+            height: 100%;
+            background: #fff;
+            border-radius: 3px;
+        }
+
+        .logo-shape::after {
+            content: "";
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 6px;
+            height: 100%;
+            background: #fff;
+            border-radius: 3px;
+        }
+
+        .logo-middle {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #fff;
+            border-radius: 3px;
+        }
+
+        .header-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.2;
+        }
+        .header-sub {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            line-height: 1.5;
+        }
+        .header-sub .blue-text {
+            color: #0052cc;
+            font-weight: 600;
+        }
+        .header-sub .space {
+            display: inline-block;
+            width: 12px;
+        }
+
+        /* 主卡片 */
+        .main-card {
+            background: #fff;
+            border-radius: var(--card-radius);
+            box-shadow: 0 8px 32px rgba(0, 82, 204, 0.08);
+            overflow: hidden;
+            margin-bottom: 40px;
+        }
+
+        /* Tab 导航 */
+        .tab-nav {
+            display: flex;
+            background: #f7f8fa;
+            border-bottom: 1px solid #e5e6eb;
+        }
+
+        .tab-item {
+            flex: 1;
+            padding: 18px 24px;
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tab-item.active {
+            color: var(--primary);
+            background: #fff;
+            border-color: var(--primary);
+            font-weight: 600;
+        }
+
+        .tab-item:hover:not(.active) {
+            color: #007bff;
+            background: var(--bg-light);
+        }
+
+        /* 对话区 */
+        .chat-area {
+            padding: 30px;
+            min-height: 420px;
+            display: none;
+        }
+
+        .chat-area.active {
+            display: block;
+        }
+
+        .guide-text {
+            font-size: 22px;
+            color: var(--text-desc);
+            line-height: 1.6;
+        }
+
+        /* 输入区域 */
+        .input-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 30px;
+            background: #f7f8fa;
+            border-top: 1px solid #e5e6eb;
+        }
+
+        .input-box {
+            flex: 1;
+            background: #fff;
+            border: 1px solid #d1d5db;
+            border-radius: 16px;
+            padding: 14px 18px;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .input-box:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
+        }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: none;
+            background: #fff;
+            color: var(--text-secondary);
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* 思考过程按钮 */
+        .think-btn {
+            width: auto;
+            padding: 0 14px;
+            height: 40px;
+            font-size: 14px;
+            border: 1px solid var(--primary);
+            background: #fff;
+            color: var(--primary);
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .think-btn.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .send-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary);
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* 技术推荐板块 */
+        .tech-section {
+            margin-top: 50px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 24px;
+            padding-left: 12px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .tech-card {
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,82,204,0.06);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .tech-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,82,204,0.12);
+        }
+
+        .tech-img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .tech-info {
+            padding: 16px;
+        }
+
+        .tech-name {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .tech-level,
+        .tech-source {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        /* 弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .modal {
+            background: #fff;
+            width: 90%;
+            max-width: 700px;
+            border-radius: 20px;
+            padding: 30px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #f2f2f2;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 20px;
+            padding-right: 40px;
+        }
+        .modal-item {
+            margin-bottom: 16px;
+        }
+        .modal-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+        .modal-text {
+            font-size: 15px;
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .tech-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-shape">
+                        <div class="logo-middle"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="header-title">海尔科技合作智能体</div>
+                    <div class="header-sub">
+                        <span class="blue-text">嗨，我是海小智 | 你的专业创新伙伴</span><br>
+                        需求拆解 · 资源匹配 · 技术问题，都来问我吧。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主卡片 -->
+        <div class="main-card">
+            <div class="tab-nav">
+                <div class="tab-item active" data-tab="match">🤝 智能匹配</div>
+                <div class="tab-item" data-tab="tech">📋 技术推荐</div>
+                <div class="tab-item" data-tab="search">🎓 深度搜索</div>
+                <div class="tab-item" data-tab="import">📤 成果导入</div>
+            </div>
+
+            <div class="chat-area active" id="match-chat">
+                <div class="guide-text">😊 你好呀！告诉我你的技术难题或研发需求吧～
+                    <br>我会帮你理清思路，精准匹配到合适的技术方案、行业专家，还有海尔的合作资源，让你的研发之路更顺畅～</div>
+            </div>
+            
+            <div class="chat-area" id="tech-chat">
+                <div class="guide-text">✨ 想了解哪些技术领域或创新方向呢？
+                    <br>告诉我你的需求，我会为你推荐成熟度匹配、适配性高的优质技术方案，还会说明技术优势和应用场景，助力你的创新方案快速落地～</div>
+            </div>
+            
+            <div class="chat-area" id="search-chat">
+                <div class="guide-text">🔍 输入你关注的技术关键词或研发需求吧～
+                    <br>我会跨库检索相关的专利、论文和技术成果，为你提供权威精准的溯源报告，还会梳理核心技术点和行业应用情况哦～</div>
+            </div>
+            
+            <!-- 👇 这是修改后的 成果导入 引导语 -->
+            <div class="chat-area" id="import-chat">
+                <div class="guide-text">📥 欢迎上传你的科技成果！你可以自由选择导入方式：
+                    <br>方式1：手动填写【组织/专家名称】+【成果名称（专利/论文）】；
+                    <br>方式2：上传技术文档（PPT/PDF/WORD）；方式3：通过API接口批量导入。
+                    <br>我会自动匹配海尔内部技术需求与合作场景，分析落地可行性，提供合作机会与落地建议～</div>
+            </div>
+
+            <div class="input-area">
+                <button class="action-btn">📎</button>
+                <button class="think-btn">💡 思考过程</button>
+                <input type="text" class="input-box" placeholder="请输入您的问题或需求...">
+                <button class="send-btn">↑</button>
+            </div>
+        </div>
+
+        <!-- 技术推荐 -->
+        <div class="tech-section">
+            <div class="section-title">技术推荐</div>
+
+            <div class="tech-grid">
+                <div class="tech-card" data-id="1">
+                    <img src="https://picsum.photos/seed/tech1/400/200" class="tech-img">
+                    <div class="tech-info">
+                        <div class="tech-name">高效变频制冷技术</div>
+                        <div class="tech-level">技术成熟度：已量产</div>
+                        <div class="tech-source">技术来源：华中科技大学</div>
+                    </div>
+                </div>
+                <div class="tech-card" data-id="2">
+                    <img src="https://picsum.photos/seed/tech2/400/200" class="tech-img">
+                    <div class="tech-info">
+                        <div class="tech-name">智能恒温控制算法</div>
+                        <div class="tech-level">技术成熟度：中试阶段</div>
+                        <div class="tech-source">技术来源：上海交通大学</div>
+                    </div>
+                </div>
+                <div class="tech-card" data-id="3">
+                    <img src="https://picsum.photos/seed/tech3/400/200" class="tech-img">
+                    <div class="tech-info">
+                        <div class="tech-name">IoT家电互联互通方案</div>
+                        <div class="tech-level">技术成熟度：已量产</div>
+                        <div class="tech-source">技术来源：西安交通大学</div>
+                    </div>
+                </div>
+                <div class="tech-card" data-id="4">
+                    <img src="https://picsum.photos/seed/tech4/400/200" class="tech-img">
+                    <div class="tech-info">
+                        <div class="tech-name">超低功耗电源管理</div>
+                        <div class="tech-level">技术成熟度：研发完成</div>
+                        <div class="tech-source">技术来源：中国海洋大学</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tech-grid">
+                <div class="tech-card" data-id="5">
+                    <img src="https://picsum.photos/seed/tech5/400/200" class="tech-img">
+                    <div class="tech-info">
+                        <div class="tech-name">AI智能降噪技术</div>
+                        <div class="tech-level">技术成熟度：已量产</div>
+                        <div class="tech-source">技术来源：青岛大学</div>
+                    </div>
+                </div>
+                <div class="tech-card" data-id="6">
+                    <img src="https://picsum.photos/seed/tech6/400/200" class="tech-img">
+                    <div class="tech-info">
+                        <div class="tech-name">绿色环保冷媒技术</div>
+                        <div class="tech-level">技术成熟度：中试阶段</div>
+                        <div class="tech-source">技术来源：华中科技大学</div>
+                    </div>
+                </div>
+                <div class="tech-card" data-id="7">
+                    <img src="https://picsum.photos/seed/tech7/400/200" class="tech-img">
+                    <div class="tech-info">
+                        <div class="tech-name">边缘计算智能决策</div>
+                        <div class="tech-level">技术成熟度：研发中</div>
+                        <div class="tech-source">技术来源：上海交通大学</div>
+                    </div>
+                </div>
+                <div class="tech-card" data-id="8">
+                    <img src="https://picsum.photos/seed/tech8/400/200" class="tech-img">
+                    <div class="tech-info">
+                        <div class="tech-name">家电安全加密方案</div>
+                        <div class="tech-level">技术成熟度：已量产</div>
+                        <div class="tech-source">技术来源：中国海洋大学</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 详情弹窗 -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <button class="modal-close" id="modalClose">×</button>
+            <div class="modal-title" id="modalTitle">方案名称</div>
+            <div class="modal-item">
+                <div class="modal-label">所属资源</div>
+                <div class="modal-text" id="modalSource"></div>
+            </div>
+            <div class="modal-item">
+                <div class="modal-label">技术原理</div>
+                <div class="modal-text" id="modalPrinciple"></div>
+            </div>
+            <div class="modal-item">
+                <div class="modal-label">技术优势</div>
+                <div class="modal-text" id="modalAdvantage"></div>
+            </div>
+            <div class="modal-item">
+                <div class="modal-label">技术成熟度</div>
+                <div class="modal-text" id="modalLevel"></div>
+            </div>
+            <div class="modal-item">
+                <div class="modal-label">应用场景</div>
+                <div class="modal-text" id="modalScene"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab切换
+        const tabs = document.querySelectorAll('.tab-item');
+        const areas = document.querySelectorAll('.chat-area');
+        const thinkBtn = document.querySelector('.think-btn');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                areas.forEach(a => a.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab+'-chat').classList.add('active');
+            });
+        });
+
+        // 思考过程开关
+        thinkBtn.addEventListener('click', () => {
+            thinkBtn.classList.toggle('active');
+        });
+
+        // 技术方案数据
+        const techData = [
+            {
+                name: "高效变频制冷技术",
+                source: "华中科技大学",
+                principle: "采用变频压缩机+自适应流量调节算法，根据环境温度与负载动态调整制冷功率，实现变负荷高效运行。",
+                advantage: "能耗比传统定频降低35%，制冷速度提升40%，噪音降低10dB，运行更稳定。",
+                level: "已量产",
+                scene: "家用空调、中央空调、冰箱冷柜、冷链物流设备。"
+            },
+            {
+                name: "智能恒温控制算法",
+                source: "上海交通大学",
+                principle: "基于PID模糊控制+机器学习预测模型，提前预判温度波动，精准调节输出功率。",
+                advantage: "温度波动控制在±0.3℃，无频繁启停，舒适性大幅提升，节能15%-25%。",
+                level: "中试阶段",
+                scene: "恒温冰箱、酒柜、医疗冷链、精密实验室环境。"
+            },
+            {
+                name: "IoT家电互联互通方案",
+                source: "西安交通大学",
+                principle: "基于WiFi/蓝牙双模通信+统一协议栈，实现家电设备自动发现、自动组网、数据互通。",
+                advantage: "跨品牌兼容，连接成功率99.8%，响应延迟<100ms，支持本地/云端双模式。",
+                level: "已量产",
+                scene: "智能家居全屋控制、多品牌家电联动、社区智慧物联。"
+            },
+            {
+                name: "超低功耗电源管理",
+                source: "中国海洋大学",
+                principle: "多级休眠唤醒机制+动态调压算法，在待机与轻载状态下最小化功耗。",
+                advantage: "待机功耗<0.1W，电池续航提升3倍，适配各类电池供电IoT设备。",
+                level: "研发完成",
+                scene: "智能传感器、便携小家电、电池驱动IoT终端。"
+            },
+            {
+                name: "AI智能降噪技术",
+                source: "青岛大学",
+                principle: "双麦阵列拾音+深度学习降噪模型，实时分离人声与环境噪音。",
+                advantage: "降噪幅度可达30dB，语音识别准确率提升40%，抗干扰能力强。",
+                level: "已量产",
+                scene: "智能音箱、空调语音控制、厨房家电、车载语音。"
+            },
+            {
+                name: "绿色环保冷媒技术",
+                source: "华中科技大学",
+                principle: "采用天然工质混合冷媒，零ODP，低GWP，符合全球环保标准。",
+                advantage: "不破坏臭氧层，温室效应极低，换热效率提升10%，安全无毒。",
+                level: "中试阶段",
+                scene: "家用空调、商用制冷、汽车空调、工业冷链。"
+            },
+            {
+                name: "边缘计算智能决策",
+                source: "上海交通大学",
+                principle: "本地边缘芯片搭载轻量化AI模型，无需云端即可完成推理与决策。",
+                advantage: "响应毫秒级，断网可用，隐私安全，降低云端带宽与算力成本。",
+                level: "研发中",
+                scene: "智能家电自主决策、工业设备边缘控制、家庭安防。"
+            },
+            {
+                name: "家电安全加密方案",
+                source: "中国海洋大学",
+                principle: "国密算法+硬件加密芯片双重防护，通信数据全程加密。",
+                advantage: "防破解、防劫持、防篡改，通过国家网络安全等级认证。",
+                level: "已量产",
+                scene: "智能家电联网、家庭数据安全、高端设备身份认证。"
+            }
+        ];
+
+        // 弹窗功能
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalClose = document.getElementById('modalClose');
+        const cards = document.querySelectorAll('.tech-card');
+
+        cards.forEach((card, index) => {
+            card.addEventListener('click', () => {
+                const data = techData[index];
+                document.getElementById('modalTitle').innerText = data.name;
+                document.getElementById('modalSource').innerText = data.source;
+                document.getElementById('modalPrinciple').innerText = data.principle;
+                document.getElementById('modalAdvantage').innerText = data.advantage;
+                document.getElementById('modalLevel').innerText = data.level;
+                document.getElementById('modalScene').innerText = data.scene;
+                modalOverlay.style.display = 'flex';
+            });
+        });
+
+        modalClose.addEventListener('click', () => {
+            modalOverlay.style.display = 'none';
+        });
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) modalOverlay.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
