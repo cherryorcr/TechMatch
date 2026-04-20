@@ -23,7 +23,7 @@ npm -v
 如果你是首次获取项目：
 
 ```bash
-git clone <你的仓库地址>
+git clone https://github.com/cherryorcr/TechMatch
 cd techmatch
 ```
 
