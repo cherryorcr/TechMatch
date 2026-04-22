@@ -1,4 +1,4 @@
-import { SessionRecord } from '../../mock/home';
+import type { SessionRecord } from '../../types/chat';
 
 interface RecentSessionsProps {
   sessions: SessionRecord[];

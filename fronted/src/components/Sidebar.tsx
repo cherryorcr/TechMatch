@@ -13,7 +13,7 @@ const WORKSPACE_SECTION_KEY = 'techmatch.sidebar.workspace.expanded';
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const location = useLocation();
-  const { sortedSessions } = useChatSessions();
+  const { isLoadingSessions, sessionSummaries } = useChatSessions();
   const primaryItems = navigationItems.filter((item) => item.group === 'primary');
   const workspaceItems = navigationItems.filter((item) => item.group === 'workspace');
   const [historyExpanded, setHistoryExpanded] = useState(() => {
@@ -106,18 +106,24 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
         {historyExpanded ? (
           <div className="history-list">
-            {sortedSessions.map((session) => (
-              <NavLink
-                key={session.id}
-                className={({ isActive }) =>
-                  isActive ? 'history-item history-item-active' : 'history-item'
-                }
-                to={`/chat/${session.id}`}
-              >
-                <strong>{session.title}</strong>
-                <span>{session.modeLabel}</span>
-              </NavLink>
-            ))}
+            {sessionSummaries.length > 0 ? (
+              sessionSummaries.map((session) => (
+                <NavLink
+                  key={session.id}
+                  className={({ isActive }) =>
+                    isActive ? 'history-item history-item-active' : 'history-item'
+                  }
+                  to={`/chat/${session.id}`}
+                >
+                  <strong>{session.title}</strong>
+                  <span>{session.modeLabel}</span>
+                </NavLink>
+              ))
+            ) : (
+              <div className="sidebar-empty-state">
+                {isLoadingSessions ? '正在加载会话...' : '暂无历史会话'}
+              </div>
+            )}
           </div>
         ) : null}
       </section>

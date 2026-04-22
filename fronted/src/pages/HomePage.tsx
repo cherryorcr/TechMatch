@@ -16,7 +16,7 @@ import {
 
 export function HomePage() {
   const navigate = useNavigate();
-  const { createSession, sortedSessions } = useChatSessions();
+  const { createSession, error, isCreatingSession, sessionSummaries } = useChatSessions();
   const [activeMode, setActiveMode] = useState<HomeModeId>(defaultHomeMode);
   const [draft, setDraft] = useState('');
   const [paperCount, setPaperCount] = useState(defaultMatchOptions.paperCount);
@@ -25,16 +25,16 @@ export function HomePage() {
   const currentMode = homeModes[activeMode];
   const recentSessions = useMemo(
     () =>
-      sortedSessions.slice(0, 4).map((session) => ({
+      sessionSummaries.slice(0, 4).map((session) => ({
         id: session.id,
         modeId: session.modeId,
         modeLabel: session.modeLabel,
         title: session.title,
-        summary: session.messages[session.messages.length - 1]?.content ?? '继续完成这段多轮对话',
+        summary: session.latestMessage || '继续完成这段多轮对话',
         timestamp: '',
-        prompt: session.messages.find((message) => message.role === 'user')?.content ?? '',
+        prompt: '',
       })),
-    [sortedSessions],
+    [sessionSummaries],
   );
 
   function handlePaperCountChange(nextValue: number) {
@@ -46,23 +46,27 @@ export function HomePage() {
     setPaperCount(Math.max(1, Math.min(500, Math.floor(nextValue))));
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const trimmed = draft.trim();
 
     if (!trimmed) {
       return;
     }
 
-    const sessionId = createSession({
-      modeId: activeMode,
-      options: {
-        paperCount,
-        showReasoning,
-      },
-      prompt: trimmed,
-    });
-
-    navigate(`/chat/${sessionId}`);
+    try {
+      const sessionId = await createSession({
+        modeId: activeMode,
+        options: {
+          paperCount,
+          showReasoning,
+        },
+        prompt: trimmed,
+      });
+      setDraft('');
+      navigate(`/chat/${sessionId}`);
+    } catch {
+      return;
+    }
   }
 
   return (
@@ -76,7 +80,10 @@ export function HomePage() {
           />
 
           <div className="home-input-panel">
+            {error ? <div className="status-banner status-banner-error">{error}</div> : null}
+
             <ChatInputBox
+              disabled={isCreatingSession}
               inputHint={currentMode.inputHint}
               paperCount={paperCount}
               placeholder={currentMode.placeholder}

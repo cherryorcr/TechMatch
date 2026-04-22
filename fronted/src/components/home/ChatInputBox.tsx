@@ -2,6 +2,7 @@ import { FormEvent } from 'react';
 import { paperCountOptions } from '../../mock/home';
 
 interface ChatInputBoxProps {
+  disabled?: boolean;
   value: string;
   placeholder: string;
   inputHint: string;
@@ -10,10 +11,11 @@ interface ChatInputBoxProps {
   onChange: (value: string) => void;
   onPaperCountChange: (value: number) => void;
   onShowReasoningChange: (value: boolean) => void;
-  onSubmit: () => void;
+  onSubmit: () => void | Promise<void>;
 }
 
 export function ChatInputBox({
+  disabled = false,
   value,
   placeholder,
   inputHint,
@@ -26,13 +28,14 @@ export function ChatInputBox({
 }: ChatInputBoxProps) {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    onSubmit();
+    void onSubmit();
   }
 
   return (
     <form className="chat-input-box" onSubmit={handleSubmit}>
       <div className="input-frame">
         <textarea
+          disabled={disabled}
           placeholder={placeholder}
           rows={7}
           value={value}
@@ -42,8 +45,8 @@ export function ChatInputBox({
 
       <div className="chat-input-footer">
         <span className="chat-input-hint">{inputHint}</span>
-        <button className="submit-button" type="submit">
-          开始对话
+        <button className="submit-button" disabled={disabled || !value.trim()} type="submit">
+          {disabled ? '提交中...' : '开始对话'}
         </button>
       </div>
 
@@ -52,19 +55,21 @@ export function ChatInputBox({
           <span>匹配论文数</span>
           <div className="count-stepper">
             <button
+              disabled={disabled}
               type="button"
               onClick={() => onPaperCountChange(Math.max(1, paperCount - 1))}
             >
               -
             </button>
             <input
+              disabled={disabled}
               min={1}
               step={1}
               type="number"
               value={paperCount}
               onChange={(event) => onPaperCountChange(Number(event.target.value))}
             />
-            <button type="button" onClick={() => onPaperCountChange(paperCount + 1)}>
+            <button disabled={disabled} type="button" onClick={() => onPaperCountChange(paperCount + 1)}>
               +
             </button>
           </div>
@@ -73,6 +78,7 @@ export function ChatInputBox({
         <label className="home-option-toggle">
           <input
             checked={showReasoning}
+            disabled={disabled}
             type="checkbox"
             onChange={(event) => onShowReasoningChange(event.target.checked)}
           />
@@ -84,6 +90,7 @@ export function ChatInputBox({
             <button
               key={option}
               type="button"
+              disabled={disabled}
               className={paperCount === option ? 'paper-preset paper-preset-active' : 'paper-preset'}
               onClick={() => onPaperCountChange(option)}
             >

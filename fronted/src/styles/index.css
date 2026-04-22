@@ -44,6 +44,10 @@ body {
   min-height: 100vh;
 }
 
+body {
+  color: var(--text-main);
+}
+
 button,
 select,
 textarea {
@@ -52,6 +56,12 @@ textarea {
 
 button {
   cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none !important;
 }
 
 textarea {
@@ -63,6 +73,10 @@ button,
 textarea,
 select {
   -webkit-tap-highlight-color: transparent;
+}
+
+input {
+  font: inherit;
 }
 
 button:focus-visible,
@@ -352,6 +366,12 @@ select:focus-visible {
   gap: 0.42rem;
 }
 
+.sidebar-empty-state {
+  padding: 0.9rem 0.2rem;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
 .nav-link {
   display: flex;
   align-items: center;
@@ -369,6 +389,45 @@ select:focus-visible {
 .nav-link-active {
   border-color: rgba(120, 168, 255, 0.22);
   background: rgba(255, 255, 255, 0.05);
+}
+
+.status-banner,
+.page-status-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.95rem 1rem;
+  border-radius: 1rem;
+}
+
+.status-banner {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.status-banner-error {
+  border-color: rgba(242, 138, 109, 0.38);
+  background: rgba(242, 138, 109, 0.12);
+  color: var(--text-main);
+}
+
+.page-status-card {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.page-status-card strong,
+.page-status-card p {
+  margin: 0;
+}
+
+.retry-button {
+  padding: 0.55rem 0.85rem;
+  border: 1px solid rgba(120, 168, 255, 0.28);
+  border-radius: 0.9rem;
+  background: rgba(120, 168, 255, 0.12);
+  color: var(--text-main);
 }
 
 .nav-icon {
