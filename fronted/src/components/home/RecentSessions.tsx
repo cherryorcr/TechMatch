@@ -10,7 +10,7 @@ export function RecentSessions({ sessions, onOpen }: RecentSessionsProps) {
     <section className="recent-sessions-strip">
       <div className="section-caption section-caption-inline">
         <span className="eyebrow">最近对话</span>
-        <span className="section-caption-note">点击后可直接回到对应多轮对话。</span>
+        <span className="section-caption-note">点击后可直接回到对应的多轮对话。</span>
       </div>
 
       <div className="session-chip-list">

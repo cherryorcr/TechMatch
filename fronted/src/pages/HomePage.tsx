@@ -73,13 +73,59 @@ export function HomePage() {
     <div className="page-grid page-grid-home page-grid-home-single">
       <div className="home-main-stack home-main-stack-centered">
         <section className="panel home-stage-panel">
-          <ChatHero
-            modeLabel={currentMode.label}
-            subtitle={currentMode.subtitle}
-            title={currentMode.title}
-          />
+          <div className="home-stage-grid">
+            <div className="home-stage-copy">
+              <ChatHero
+                modeLabel={currentMode.label}
+                subtitle={currentMode.subtitle}
+                title={currentMode.title}
+              />
 
-          <div className="home-input-panel">
+              <div className="hero-signal-strip">
+                {currentMode.previewSections.map((section) => (
+                  <article key={section.id} className="hero-signal-card">
+                    <span>{section.title}</span>
+                    <strong>{section.items[0]}</strong>
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            <aside className="hero-side-card">
+              <span className="eyebrow">Workflow</span>
+              <h2>让匹配从“能聊”走向“能决策”</h2>
+              <p className="hero-side-intro">
+                系统会先澄清输入边界，再输出更适合内部协作的论文、专利与机构线索。
+              </p>
+
+              <ol className="hero-step-list">
+                {currentMode.previewSections.map((section, index) => (
+                  <li key={section.id}>
+                    <span className="hero-step-index">0{index + 1}</span>
+                    <div>
+                      <strong>{section.title}</strong>
+                      <p>{section.items.join(' · ')}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </aside>
+          </div>
+
+          <div className="home-command-shell">
+            <div className="home-command-header">
+              <div>
+                <span className="eyebrow">Start Session</span>
+                <h2>从一个明确的问题开始</h2>
+                <p>先给出需求、成果或机构目标，再通过多轮澄清进入论文、专利与机构匹配。</p>
+              </div>
+
+              <div className="home-command-badges">
+                <span className="home-command-pill">Multi-turn</span>
+                <span className="home-command-pill">Top {paperCount}</span>
+              </div>
+            </div>
+
             {error ? <div className="status-banner status-banner-error">{error}</div> : null}
 
             <ChatInputBox
@@ -94,22 +140,22 @@ export function HomePage() {
               onShowReasoningChange={setShowReasoning}
               onSubmit={handleSubmit}
             />
-
-            <ModeSwitcher
-              activeMode={activeMode}
-              modes={homeModeList}
-              onChange={setActiveMode}
-            />
-
-            <PromptSuggestions suggestions={currentMode.suggestions} onSelect={setDraft} />
           </div>
+
+          <ModeSwitcher
+            activeMode={activeMode}
+            modes={homeModeList}
+            onChange={setActiveMode}
+          />
+
+          <PromptSuggestions suggestions={currentMode.suggestions} onSelect={setDraft} />
         </section>
 
         <section className="panel home-preview-panel">
           <div className="section-caption">
             <span className="eyebrow">开始前可先锁定</span>
             <span className="section-caption-note">
-              先给一点结构化线索，后面的多轮对话会更快进入真正的匹配阶段。
+              先补充结构化线索，后续多轮对话会更快进入真正的匹配阶段。
             </span>
           </div>
 

@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { AppShell } from '../layout/AppShell';
 import { navigationItems } from '../mock/navigation';
+import { AuthPage } from '../pages/AuthPage';
 import { ChatPage } from '../pages/ChatPage';
 import { HistoryPage } from '../pages/HistoryPage';
 import { HomePage } from '../pages/HomePage';
@@ -35,6 +36,10 @@ export const router = createBrowserRouter([
       {
         path: 'history',
         element: <HistoryPage />,
+      },
+      {
+        path: 'auth',
+        element: <AuthPage />,
       },
       ...placeholderRoutes,
     ],

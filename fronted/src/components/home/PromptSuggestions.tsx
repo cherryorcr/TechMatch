@@ -10,7 +10,7 @@ export function PromptSuggestions({ suggestions, onSelect }: PromptSuggestionsPr
     <section className="prompt-suggestions">
       <div className="section-caption">
         <span className="eyebrow">推荐提问</span>
-        <span className="section-caption-note">点击后会自动填充输入框，你可以继续修改再发起多轮对话。</span>
+        <span className="section-caption-note">点击后会自动填充输入框，你可以继续修改，再发起多轮匹配。</span>
       </div>
 
       <div className="prompt-grid">
