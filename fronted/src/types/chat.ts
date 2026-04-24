@@ -11,6 +11,7 @@ export interface ChatMessage {
   content: string;
   meta: string;
   reasoning?: string;
+  status?: 'sending' | 'failed';
 }
 
 export interface ChatSession {

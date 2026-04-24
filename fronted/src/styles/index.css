@@ -864,6 +864,23 @@ html[data-theme='light'] .auth-field input {
   box-shadow: inset 0 0 0 1px rgba(63, 111, 255, 0.04);
 }
 
+html[data-theme='light'] .chat-markdown code {
+  background: rgba(22, 46, 87, 0.08);
+  color: #215b4a;
+}
+
+html[data-theme='light'] .chat-markdown pre {
+  background: rgba(241, 246, 255, 0.92);
+}
+
+html[data-theme='light'] .chat-markdown th {
+  background: rgba(63, 111, 255, 0.08);
+}
+
+html[data-theme='light'] .chat-bubble-status-failed {
+  color: #9a3b25;
+}
+
 html[data-theme='light'] .input-frame {
   background:
     radial-gradient(circle at top right, rgba(63, 111, 255, 0.14), transparent 28%),
@@ -1754,16 +1771,166 @@ html[data-theme='light'] .app-backdrop-glow-right {
   background: rgba(139, 226, 194, 0.06);
 }
 
-.chat-bubble p {
-  margin: 0.38rem 0 0;
-  white-space: pre-line;
-  color: var(--text-soft);
-  line-height: 1.8;
+.chat-bubble-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .chat-bubble-meta {
   display: inline-block;
   font-size: 0.84rem;
+}
+
+.chat-bubble-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid rgba(120, 168, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(120, 168, 255, 0.1);
+  color: var(--accent-strong);
+  font-size: 0.78rem;
+}
+
+.chat-bubble-status-failed {
+  border-color: rgba(242, 138, 109, 0.32);
+  background: rgba(242, 138, 109, 0.14);
+  color: #ffd8cc;
+}
+
+.chat-markdown {
+  margin-top: 0.45rem;
+  color: var(--text-soft);
+}
+
+.chat-markdown > :first-child {
+  margin-top: 0;
+}
+
+.chat-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.chat-markdown p,
+.chat-markdown ul,
+.chat-markdown ol,
+.chat-markdown pre,
+.chat-markdown blockquote,
+.chat-markdown table,
+.chat-markdown hr {
+  margin: 0.55rem 0 0;
+}
+
+.chat-markdown li + li {
+  margin-top: 0.28rem;
+}
+
+.chat-markdown ul,
+.chat-markdown ol {
+  padding-left: 1.4rem;
+}
+
+.chat-markdown h1,
+.chat-markdown h2,
+.chat-markdown h3,
+.chat-markdown h4,
+.chat-markdown h5,
+.chat-markdown h6 {
+  margin: 0.85rem 0 0;
+  color: var(--text-main);
+  line-height: 1.35;
+}
+
+.chat-markdown p,
+.chat-markdown li,
+.chat-markdown blockquote {
+  line-height: 1.8;
+}
+
+.chat-markdown a {
+  color: var(--accent-strong);
+  text-decoration-color: rgba(120, 168, 255, 0.4);
+}
+
+.chat-markdown strong {
+  color: var(--text-main);
+}
+
+.chat-markdown code {
+  padding: 0.12rem 0.35rem;
+  border-radius: 0.45rem;
+  background: rgba(255, 255, 255, 0.08);
+  color: #c7f2e2;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.92em;
+}
+
+.chat-markdown pre {
+  overflow-x: auto;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid rgba(149, 169, 211, 0.16);
+  border-radius: 0.9rem;
+  background: rgba(5, 10, 19, 0.72);
+}
+
+.chat-markdown pre code {
+  display: block;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  white-space: pre;
+}
+
+.chat-markdown blockquote {
+  padding-left: 0.9rem;
+  border-left: 3px solid rgba(120, 168, 255, 0.32);
+  color: var(--text-muted);
+}
+
+.chat-markdown-table-wrap {
+  margin-top: 0.55rem;
+  overflow-x: auto;
+}
+
+.chat-markdown table {
+  width: 100%;
+  min-width: 420px;
+  border-collapse: collapse;
+  border: 1px solid rgba(149, 169, 211, 0.16);
+  border-radius: 0.9rem;
+  overflow: hidden;
+}
+
+.chat-markdown th,
+.chat-markdown td {
+  padding: 0.68rem 0.8rem;
+  border-bottom: 1px solid rgba(149, 169, 211, 0.12);
+  text-align: left;
+  vertical-align: top;
+}
+
+.chat-markdown th {
+  background: rgba(120, 168, 255, 0.08);
+  color: var(--text-main);
+}
+
+.chat-markdown tr:last-child td {
+  border-bottom: 0;
+}
+
+.chat-markdown hr {
+  border: 0;
+  border-top: 1px solid rgba(149, 169, 211, 0.16);
+}
+
+.chat-bubble-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.85rem;
 }
 
 .reasoning-block {
@@ -1782,9 +1949,8 @@ html[data-theme='light'] .app-backdrop-glow-right {
   display: none;
 }
 
-.reasoning-block p {
-  margin: 0.55rem 0 0;
-  line-height: 1.7;
+.reasoning-block .chat-markdown {
+  margin-top: 0.55rem;
 }
 
 .chat-composer {

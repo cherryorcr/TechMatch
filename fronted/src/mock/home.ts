@@ -26,10 +26,10 @@ export type {
 
 export const defaultHomeMode: HomeModeId = 'internal-industry';
 export const defaultMatchOptions: MatchOptions = {
-  paperCount: 20,
+  paperCount: 5,
   showReasoning: false,
 };
-export const paperCountOptions = [10, 20, 30, 50];
+export const paperCountOptions = [5, 10, 20, 30];
 
 type SignalGroup = {
   label: string;

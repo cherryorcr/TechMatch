@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { chatApi } from '../api/chatApi';
 import type {
+  ChatMessage,
   ChatSession,
   ChatSessionSummary,
   ContextualRecommendationState,
@@ -49,12 +50,40 @@ function toSessionSummary(session: ChatSession): ChatSessionSummary {
   };
 }
 
-function upsertSummary(
-  current: ChatSessionSummary[],
-  nextSummary: ChatSessionSummary,
-) {
+function upsertSummary(current: ChatSessionSummary[], nextSummary: ChatSessionSummary) {
   const remaining = current.filter((session) => session.id !== nextSummary.id);
   return sortSummaries([nextSummary, ...remaining]);
+}
+
+function createOptimisticMessageId() {
+  return `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function createOptimisticUserMessage(prompt: string, meta: string): ChatMessage {
+  return {
+    id: createOptimisticMessageId(),
+    role: 'user',
+    content: prompt,
+    meta,
+    status: 'sending',
+  };
+}
+
+function updateMessageStatus(
+  messages: ChatMessage[],
+  messageId: string,
+  status: ChatMessage['status'],
+) {
+  return messages.map((message) => {
+    if (message.id !== messageId) {
+      return message;
+    }
+
+    return {
+      ...message,
+      status,
+    };
+  });
 }
 
 export function ChatSessionsProvider({ children }: { children: ReactNode }) {
@@ -166,35 +195,83 @@ export function ChatSessionsProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const appendMessage = useCallback(async (params: { prompt: string; sessionId: string }) => {
-    const { prompt, sessionId } = params;
-    setAppendingSessionIds((current) => ({ ...current, [sessionId]: true }));
-    setError(null);
+  const appendMessage = useCallback(
+    async (params: { prompt: string; sessionId: string }) => {
+      const { prompt, sessionId } = params;
+      const currentSession = sessionById[sessionId];
+      const optimisticMessage = currentSession
+        ? createOptimisticUserMessage(prompt, currentSession.modeLabel)
+        : null;
+      const optimisticSession =
+        currentSession && optimisticMessage
+          ? {
+              ...currentSession,
+              messages: [...currentSession.messages, optimisticMessage],
+              updatedAt: Date.now(),
+            }
+          : null;
 
-    try {
-      const response = await chatApi.appendMessage(sessionId, { prompt });
-      setSessionById((current) => ({
-        ...current,
-        [sessionId]: response.session,
-      }));
-      setRecommendationBySessionId((current) => ({
-        ...current,
-        [sessionId]: response.recommendationPanel,
-      }));
-      setSessionSummaries((current) => upsertSummary(current, toSessionSummary(response.session)));
-    } catch (requestError) {
-      const nextMessage =
-        requestError instanceof Error ? requestError.message : '发送消息失败';
-      setError(nextMessage);
-      throw requestError;
-    } finally {
-      setAppendingSessionIds((current) => {
-        const nextState = { ...current };
-        delete nextState[sessionId];
-        return nextState;
-      });
-    }
-  }, []);
+      if (optimisticSession) {
+        setSessionById((current) => ({
+          ...current,
+          [sessionId]: optimisticSession,
+        }));
+        setSessionSummaries((current) =>
+          upsertSummary(current, toSessionSummary(optimisticSession)),
+        );
+      }
+
+      setAppendingSessionIds((current) => ({ ...current, [sessionId]: true }));
+      setError(null);
+
+      try {
+        const response = await chatApi.appendMessage(sessionId, { prompt });
+        setSessionById((current) => ({
+          ...current,
+          [sessionId]: response.session,
+        }));
+        setRecommendationBySessionId((current) => ({
+          ...current,
+          [sessionId]: response.recommendationPanel,
+        }));
+        setSessionSummaries((current) =>
+          upsertSummary(current, toSessionSummary(response.session)),
+        );
+      } catch (requestError) {
+        if (optimisticSession && optimisticMessage) {
+          const failedSession: ChatSession = {
+            ...optimisticSession,
+            messages: updateMessageStatus(
+              optimisticSession.messages,
+              optimisticMessage.id,
+              'failed',
+            ),
+            updatedAt: Date.now(),
+          };
+
+          setSessionById((current) => ({
+            ...current,
+            [sessionId]: failedSession,
+          }));
+          setSessionSummaries((current) =>
+            upsertSummary(current, toSessionSummary(failedSession)),
+          );
+        }
+
+        const nextMessage =
+          requestError instanceof Error ? requestError.message : '发送消息失败';
+        setError(nextMessage);
+        throw requestError;
+      } finally {
+        setAppendingSessionIds((current) => {
+          const nextState = { ...current };
+          delete nextState[sessionId];
+          return nextState;
+        });
+      }
+    },
+    [sessionById],
+  );
 
   useEffect(() => {
     void refreshSessions().catch(() => undefined);

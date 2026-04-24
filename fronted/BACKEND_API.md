@@ -29,7 +29,7 @@ type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
 
 ```json
 {
-  "paperCount": 20,
+  "paperCount": 5,
   "showReasoning": false
 }
 ```
@@ -68,7 +68,7 @@ type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
   "modeId": "internal-industry",
   "modeLabel": "内部产业用户模式",
   "options": {
-    "paperCount": 20,
+    "paperCount": 5,
     "showReasoning": false
   },
   "messages": [
@@ -115,7 +115,7 @@ type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
   "latestMessage": "已进入匹配阶段",
   "updatedAt": 1713772815000,
   "options": {
-    "paperCount": 20,
+    "paperCount": 5,
     "showReasoning": false
   }
 }
@@ -213,7 +213,7 @@ type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
       "latestMessage": "已进入匹配阶段",
       "updatedAt": 1713772815000,
       "options": {
-        "paperCount": 20,
+        "paperCount": 5,
         "showReasoning": false
       }
     }
@@ -239,7 +239,7 @@ type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
 {
   "modeId": "internal-industry",
   "options": {
-    "paperCount": 20,
+    "paperCount": 5,
     "showReasoning": false
   },
   "prompt": "我们希望围绕固态电池产业化需求匹配相关论文和专利"
@@ -256,7 +256,7 @@ type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
     "modeId": "internal-industry",
     "modeLabel": "内部产业用户模式",
     "options": {
-      "paperCount": 20,
+      "paperCount": 5,
       "showReasoning": false
     },
     "messages": [
@@ -320,7 +320,7 @@ type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
     "modeId": "internal-industry",
     "modeLabel": "内部产业用户模式",
     "options": {
-      "paperCount": 20,
+      "paperCount": 5,
       "showReasoning": false
     },
     "messages": [
@@ -385,7 +385,7 @@ type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
     "modeId": "internal-industry",
     "modeLabel": "内部产业用户模式",
     "options": {
-      "paperCount": 20,
+      "paperCount": 5,
       "showReasoning": false
     },
     "messages": [
