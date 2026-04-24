@@ -1,4 +1,4 @@
-import { ContextualRecommendationState } from '../../mock/home';
+import type { ContextualRecommendationState } from '../../types/chat';
 
 interface RecommendationPanelProps {
   modeLabel: string;

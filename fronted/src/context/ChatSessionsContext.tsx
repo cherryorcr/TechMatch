@@ -1,165 +1,314 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react';
-import {
-  buildAssistantReply,
-  createSeedSessions,
-  createSessionTitle,
-  homeModes,
-  type ChatMessage,
-  type ChatSession,
-  type HomeModeId,
-  type MatchOptions,
-} from '../mock/home';
-
-const CHAT_STORAGE_KEY = 'techmatch.chat.sessions.v2';
+import { chatApi } from '../api/chatApi';
+import type {
+  ChatMessage,
+  ChatSession,
+  ChatSessionSummary,
+  ContextualRecommendationState,
+  CreateSessionPayload,
+} from '../types/chat';
 
 interface ChatSessionsContextValue {
-  sessions: ChatSession[];
-  sortedSessions: ChatSession[];
-  createSession: (params: {
-    modeId: HomeModeId;
-    options: MatchOptions;
-    prompt: string;
-  }) => string;
-  appendMessage: (params: { prompt: string; sessionId: string }) => void;
+  sessionSummaries: ChatSessionSummary[];
+  createSession: (params: CreateSessionPayload) => Promise<string>;
+  appendMessage: (params: { prompt: string; sessionId: string }) => Promise<void>;
+  getRecommendationPanel: (sessionId: string) => ContextualRecommendationState | undefined;
   getSessionById: (sessionId: string) => ChatSession | undefined;
+  isAppendingMessage: (sessionId: string) => boolean;
+  isCreatingSession: boolean;
+  isLoadingSession: (sessionId: string) => boolean;
+  isLoadingSessions: boolean;
+  loadSession: (sessionId: string) => Promise<ChatSession>;
+  refreshSessions: () => Promise<void>;
+  clearError: () => void;
+  error: string | null;
 }
 
 const ChatSessionsContext = createContext<ChatSessionsContextValue | undefined>(undefined);
 
-function loadInitialSessions() {
-  if (typeof window === 'undefined') {
-    return createSeedSessions();
-  }
+function sortSummaries(summaries: ChatSessionSummary[]) {
+  return [...summaries].sort((left, right) => right.updatedAt - left.updatedAt);
+}
 
-  const raw = window.localStorage.getItem(CHAT_STORAGE_KEY);
+function toSessionSummary(session: ChatSession): ChatSessionSummary {
+  return {
+    id: session.id,
+    latestMessage: session.messages[session.messages.length - 1]?.content ?? '',
+    modeId: session.modeId,
+    modeLabel: session.modeLabel,
+    options: session.options,
+    title: session.title,
+    updatedAt: session.updatedAt,
+  };
+}
 
-  if (!raw) {
-    return createSeedSessions();
-  }
+function upsertSummary(current: ChatSessionSummary[], nextSummary: ChatSessionSummary) {
+  const remaining = current.filter((session) => session.id !== nextSummary.id);
+  return sortSummaries([nextSummary, ...remaining]);
+}
 
-  try {
-    const parsed = JSON.parse(raw) as ChatSession[];
+function createOptimisticMessageId() {
+  return `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
 
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      return createSeedSessions();
+function createOptimisticUserMessage(prompt: string, meta: string): ChatMessage {
+  return {
+    id: createOptimisticMessageId(),
+    role: 'user',
+    content: prompt,
+    meta,
+    status: 'sending',
+  };
+}
+
+function updateMessageStatus(
+  messages: ChatMessage[],
+  messageId: string,
+  status: ChatMessage['status'],
+) {
+  return messages.map((message) => {
+    if (message.id !== messageId) {
+      return message;
     }
 
-    return parsed;
-  } catch {
-    return createSeedSessions();
-  }
+    return {
+      ...message,
+      status,
+    };
+  });
 }
 
 export function ChatSessionsProvider({ children }: { children: ReactNode }) {
-  const [sessions, setSessions] = useState<ChatSession[]>(loadInitialSessions);
+  const [sessionSummaries, setSessionSummaries] = useState<ChatSessionSummary[]>([]);
+  const [sessionById, setSessionById] = useState<Record<string, ChatSession>>({});
+  const [recommendationBySessionId, setRecommendationBySessionId] = useState<
+    Record<string, ContextualRecommendationState>
+  >({});
+  const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const [loadingSessionIds, setLoadingSessionIds] = useState<Record<string, boolean>>({});
+  const [appendingSessionIds, setAppendingSessionIds] = useState<Record<string, boolean>>({});
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    window.localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(sessions));
-  }, [sessions]);
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
 
-  const sortedSessions = useMemo(
-    () => [...sessions].sort((left, right) => right.updatedAt - left.updatedAt),
-    [sessions],
+  const getSessionById = useCallback(
+    (sessionId: string) => sessionById[sessionId],
+    [sessionById],
   );
 
-  function createSession(params: {
-    modeId: HomeModeId;
-    options: MatchOptions;
-    prompt: string;
-  }) {
-    const { modeId, options, prompt } = params;
-    const sessionId = `chat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const userMessage: ChatMessage = {
-      id: `${sessionId}-user-1`,
-      role: 'user',
-      content: prompt,
-      meta: homeModes[modeId].label,
-    };
-    const reply = buildAssistantReply(modeId, prompt, options, 1);
-    const assistantMessage: ChatMessage = {
-      id: `${sessionId}-assistant-1`,
-      role: 'assistant',
-      content: reply.content,
-      meta: 'TechMatch AI',
-      reasoning: reply.reasoning,
-    };
-    const timestamp = Date.now();
-    const nextSession: ChatSession = {
-      id: sessionId,
-      title: createSessionTitle(prompt),
-      modeId,
-      modeLabel: homeModes[modeId].label,
-      options,
-      messages: [userMessage, assistantMessage],
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    };
+  const getRecommendationPanel = useCallback(
+    (sessionId: string) => recommendationBySessionId[sessionId],
+    [recommendationBySessionId],
+  );
 
-    setSessions((current) => [nextSession, ...current]);
+  const isLoadingSession = useCallback(
+    (sessionId: string) => Boolean(loadingSessionIds[sessionId]),
+    [loadingSessionIds],
+  );
 
-    return sessionId;
-  }
+  const isAppendingMessage = useCallback(
+    (sessionId: string) => Boolean(appendingSessionIds[sessionId]),
+    [appendingSessionIds],
+  );
 
-  function appendMessage(params: { prompt: string; sessionId: string }) {
-    const { prompt, sessionId } = params;
+  const refreshSessions = useCallback(async () => {
+    setIsLoadingSessions(true);
+    setError(null);
 
-    setSessions((current) =>
-      current.map((session) => {
-        if (session.id !== sessionId) {
-          return session;
+    try {
+      const response = await chatApi.listSessions();
+      setSessionSummaries(sortSummaries(response.sessions));
+    } catch (requestError) {
+      const nextMessage =
+        requestError instanceof Error ? requestError.message : '加载会话列表失败';
+      setError(nextMessage);
+      throw requestError;
+    } finally {
+      setIsLoadingSessions(false);
+    }
+  }, []);
+
+  const loadSession = useCallback(async (sessionId: string) => {
+    setLoadingSessionIds((current) => ({ ...current, [sessionId]: true }));
+    setError(null);
+
+    try {
+      const response = await chatApi.getSession(sessionId);
+      setSessionById((current) => ({
+        ...current,
+        [sessionId]: response.session,
+      }));
+      setRecommendationBySessionId((current) => ({
+        ...current,
+        [sessionId]: response.recommendationPanel,
+      }));
+      setSessionSummaries((current) => upsertSummary(current, toSessionSummary(response.session)));
+      return response.session;
+    } catch (requestError) {
+      const nextMessage =
+        requestError instanceof Error ? requestError.message : '加载会话详情失败';
+      setError(nextMessage);
+      throw requestError;
+    } finally {
+      setLoadingSessionIds((current) => {
+        const nextState = { ...current };
+        delete nextState[sessionId];
+        return nextState;
+      });
+    }
+  }, []);
+
+  const createSession = useCallback(async (params: CreateSessionPayload) => {
+    setIsCreatingSession(true);
+    setError(null);
+
+    try {
+      const response = await chatApi.createSession(params);
+      setSessionById((current) => ({
+        ...current,
+        [response.session.id]: response.session,
+      }));
+      setRecommendationBySessionId((current) => ({
+        ...current,
+        [response.session.id]: response.recommendationPanel,
+      }));
+      setSessionSummaries((current) => upsertSummary(current, toSessionSummary(response.session)));
+      return response.session.id;
+    } catch (requestError) {
+      const nextMessage =
+        requestError instanceof Error ? requestError.message : '创建会话失败';
+      setError(nextMessage);
+      throw requestError;
+    } finally {
+      setIsCreatingSession(false);
+    }
+  }, []);
+
+  const appendMessage = useCallback(
+    async (params: { prompt: string; sessionId: string }) => {
+      const { prompt, sessionId } = params;
+      const currentSession = sessionById[sessionId];
+      const optimisticMessage = currentSession
+        ? createOptimisticUserMessage(prompt, currentSession.modeLabel)
+        : null;
+      const optimisticSession =
+        currentSession && optimisticMessage
+          ? {
+              ...currentSession,
+              messages: [...currentSession.messages, optimisticMessage],
+              updatedAt: Date.now(),
+            }
+          : null;
+
+      if (optimisticSession) {
+        setSessionById((current) => ({
+          ...current,
+          [sessionId]: optimisticSession,
+        }));
+        setSessionSummaries((current) =>
+          upsertSummary(current, toSessionSummary(optimisticSession)),
+        );
+      }
+
+      setAppendingSessionIds((current) => ({ ...current, [sessionId]: true }));
+      setError(null);
+
+      try {
+        const response = await chatApi.appendMessage(sessionId, { prompt });
+        setSessionById((current) => ({
+          ...current,
+          [sessionId]: response.session,
+        }));
+        setRecommendationBySessionId((current) => ({
+          ...current,
+          [sessionId]: response.recommendationPanel,
+        }));
+        setSessionSummaries((current) =>
+          upsertSummary(current, toSessionSummary(response.session)),
+        );
+      } catch (requestError) {
+        if (optimisticSession && optimisticMessage) {
+          const failedSession: ChatSession = {
+            ...optimisticSession,
+            messages: updateMessageStatus(
+              optimisticSession.messages,
+              optimisticMessage.id,
+              'failed',
+            ),
+            updatedAt: Date.now(),
+          };
+
+          setSessionById((current) => ({
+            ...current,
+            [sessionId]: failedSession,
+          }));
+          setSessionSummaries((current) =>
+            upsertSummary(current, toSessionSummary(failedSession)),
+          );
         }
 
-        const nextUserCount =
-          session.messages.filter((message) => message.role === 'user').length + 1;
-        const userMessage: ChatMessage = {
-          id: `${sessionId}-user-${Date.now()}`,
-          role: 'user',
-          content: prompt,
-          meta: session.modeLabel,
-        };
-        const reply = buildAssistantReply(
-          session.modeId,
-          prompt,
-          session.options,
-          nextUserCount,
-        );
-        const assistantMessage: ChatMessage = {
-          id: `${sessionId}-assistant-${Date.now() + 1}`,
-          role: 'assistant',
-          content: reply.content,
-          meta: 'TechMatch AI',
-          reasoning: reply.reasoning,
-        };
+        const nextMessage =
+          requestError instanceof Error ? requestError.message : '发送消息失败';
+        setError(nextMessage);
+        throw requestError;
+      } finally {
+        setAppendingSessionIds((current) => {
+          const nextState = { ...current };
+          delete nextState[sessionId];
+          return nextState;
+        });
+      }
+    },
+    [sessionById],
+  );
 
-        return {
-          ...session,
-          title:
-            session.messages.length <= 2 ? createSessionTitle(prompt) : session.title,
-          messages: [...session.messages, userMessage, assistantMessage],
-          updatedAt: Date.now(),
-        };
-      }),
-    );
-  }
+  useEffect(() => {
+    void refreshSessions().catch(() => undefined);
+  }, [refreshSessions]);
 
-  function getSessionById(sessionId: string) {
-    return sessions.find((session) => session.id === sessionId);
-  }
-
-  const value: ChatSessionsContextValue = {
-    sessions,
-    sortedSessions,
-    createSession,
-    appendMessage,
-    getSessionById,
-  };
+  const value = useMemo<ChatSessionsContextValue>(
+    () => ({
+      appendMessage,
+      clearError,
+      createSession,
+      error,
+      getRecommendationPanel,
+      getSessionById,
+      isAppendingMessage,
+      isCreatingSession,
+      isLoadingSession,
+      isLoadingSessions,
+      loadSession,
+      refreshSessions,
+      sessionSummaries,
+    }),
+    [
+      appendMessage,
+      clearError,
+      createSession,
+      error,
+      getRecommendationPanel,
+      getSessionById,
+      isAppendingMessage,
+      isCreatingSession,
+      isLoadingSession,
+      isLoadingSessions,
+      loadSession,
+      refreshSessions,
+      sessionSummaries,
+    ],
+  );
 
   return <ChatSessionsContext.Provider value={value}>{children}</ChatSessionsContext.Provider>;
 }

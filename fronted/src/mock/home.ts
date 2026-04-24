@@ -1,93 +1,35 @@
-export type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
+import type {
+  ChatMessage,
+  ChatSession,
+  ContextualRecommendationState,
+  HomeModeConfig,
+  HomeModeId,
+  MatchOptions,
+  RecommendationBundle,
+  RecommendationItem,
+  SessionRecord,
+  SuggestionCard,
+} from '../types/chat';
 
-export interface MatchOptions {
-  paperCount: number;
-  showReasoning: boolean;
-}
-
-export interface ChatMessage {
-  id: string;
-  role: 'assistant' | 'user';
-  content: string;
-  meta: string;
-  reasoning?: string;
-}
-
-export interface ChatSession {
-  id: string;
-  title: string;
-  modeId: HomeModeId;
-  modeLabel: string;
-  options: MatchOptions;
-  messages: ChatMessage[];
-  createdAt: number;
-  updatedAt: number;
-}
-
-export interface SessionRecord {
-  id: string;
-  modeId: HomeModeId;
-  modeLabel: string;
-  title: string;
-  summary: string;
-  timestamp: string;
-  prompt: string;
-}
-
-export interface SuggestionCard {
-  id: string;
-  title: string;
-  prompt: string;
-}
-
-export interface RecommendationItem {
-  id: string;
-  title: string;
-  meta: string;
-  detail: string;
-  keywords?: string[];
-}
-
-export interface RecommendationBundle {
-  scholars: RecommendationItem[];
-  papers: RecommendationItem[];
-  institutions: RecommendationItem[];
-  directions: string[];
-}
-
-export interface HomePreviewSection {
-  id: string;
-  title: string;
-  items: string[];
-}
-
-export interface HomeModeConfig {
-  id: HomeModeId;
-  label: string;
-  title: string;
-  subtitle: string;
-  placeholder: string;
-  inputHint: string;
-  suggestions: SuggestionCard[];
-  previewSections: HomePreviewSection[];
-  recommendations: RecommendationBundle;
-}
-
-export interface ContextualRecommendationState {
-  stage: 'clarifying' | 'matching';
-  heading: string;
-  summary: string;
-  signals: string[];
-  nextQuestions: string[];
-  recommendations: RecommendationBundle;
-}
+export type {
+  ChatMessage,
+  ChatSession,
+  ContextualRecommendationState,
+  HomeModeConfig,
+  HomeModeId,
+  MatchOptions,
+  RecommendationBundle,
+  RecommendationItem,
+  SessionRecord,
+  SuggestionCard,
+} from '../types/chat';
 
 export const defaultHomeMode: HomeModeId = 'internal-industry';
 export const defaultMatchOptions: MatchOptions = {
-  paperCount: 20,
+  paperCount: 5,
   showReasoning: false,
 };
-export const paperCountOptions = [10, 20, 30, 50];
+export const paperCountOptions = [5, 10, 20, 30];
 
 type SignalGroup = {
   label: string;
@@ -146,13 +88,13 @@ export const homeModes: Record<HomeModeId, HomeModeConfig> = {
   'internal-industry': {
     id: 'internal-industry',
     label: '内部产业用户模式',
-    title: '提出企业需求，逐步匹配论文与专利',
+    title: '定义企业问题，组织可落地的科研线索',
     subtitle:
-      '面向企业内部需求匹配场景，先通过多轮对话澄清应用场景、技术瓶颈和转化条件，再组织论文与专利候选池。',
+      '围绕企业场景、技术瓶颈与转化约束，先完成需求澄清，再进入论文、专利和合作机构的联合匹配。',
     placeholder:
-      '请输入企业需求、应用场景、技术瓶颈，或希望匹配的论文 / 专利方向...',
+      '请输入企业需求、应用场景、关键指标，或希望匹配的论文 / 专利方向...',
     inputHint:
-      '系统会先追问需求边界，再进入论文与专利匹配阶段。你也可以直接给出行业、指标和落地约束。',
+      '建议直接写清行业、应用部门、技术指标和落地约束，系统会先帮你补齐筛选边界。',
     suggestions: [
       {
         id: 'industry-1',
@@ -266,13 +208,13 @@ export const homeModes: Record<HomeModeId, HomeModeConfig> = {
   'external-expert': {
     id: 'external-expert',
     label: '外部专家用户模式',
-    title: '输入论文或专利，反向匹配企业内部需求',
+    title: '输入成果画像，反向寻找更合适的企业需求',
     subtitle:
-      '面向学者与外部专家，先理解论文、专利和研究成果的能力边界，再去匹配企业内部的真实需求与应用场景。',
+      '面向学者与外部专家，先提炼论文、专利和成果的能力边界，再映射到企业真实需求和应用场景。',
     placeholder:
-      '请输入你的论文、专利、研究成果摘要，或希望匹配的企业需求场景...',
+      '请输入论文摘要、专利亮点、技术指标，或希望匹配的企业需求场景...',
     inputHint:
-      '建议直接输入代表论文、专利摘要、关键指标和可转化方向，系统会通过追问完善成果画像。',
+      '建议先给代表论文、专利摘要、成熟度和可转化方向，系统会继续追问补齐成果画像。',
     suggestions: [
       {
         id: 'expert-1',
@@ -386,13 +328,13 @@ export const homeModes: Record<HomeModeId, HomeModeConfig> = {
   academic: {
     id: 'academic',
     label: '高校科研机构模式',
-    title: '输入高校或科研机构，了解优势学科与成果产出',
+    title: '输入机构名称，快速建立优势学科与成果画像',
     subtitle:
-      '面向高校、研究院所和重点平台，输入机构名称后系统会继续追问关注重点，再整理其优势学科、代表成果和产出方向。',
+      '面向高校、研究院所和重点平台，先锁定机构与关注重点，再整理优势学科、代表成果和团队能力。',
     placeholder:
-      '请输入关注的高校、研究院、重点实验室，或其他科技成果产出机构名称...',
+      '请输入高校、研究院、重点实验室，或其他科技成果产出机构名称...',
     inputHint:
-      '更适合直接输入机构名称，再补充想看的方向，例如优势学科、成果、团队或平台能力。',
+      '建议先输入机构名称，再补充想看的方向，例如优势学科、代表成果、团队或平台能力。',
     suggestions: [
       {
         id: 'academic-1',
