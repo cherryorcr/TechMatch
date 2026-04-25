@@ -1,14 +1,19 @@
 import { FormEvent } from 'react';
 import { paperCountOptions } from '../../mock/home';
+import { AttachmentPicker } from '../files/AttachmentPicker';
 
 interface ChatInputBoxProps {
   disabled?: boolean;
+  files: File[];
   value: string;
   placeholder: string;
   inputHint: string;
+  isUploadingFiles?: boolean;
   paperCount: number;
   showReasoning: boolean;
   onChange: (value: string) => void;
+  onAddFiles: (files: File[]) => void;
+  onRemoveFile: (index: number) => void;
   onPaperCountChange: (value: number) => void;
   onShowReasoningChange: (value: boolean) => void;
   onSubmit: () => void | Promise<void>;
@@ -16,12 +21,16 @@ interface ChatInputBoxProps {
 
 export function ChatInputBox({
   disabled = false,
+  files,
   value,
   placeholder,
   inputHint,
+  isUploadingFiles = false,
   paperCount,
   showReasoning,
   onChange,
+  onAddFiles,
+  onRemoveFile,
   onPaperCountChange,
   onShowReasoningChange,
   onSubmit,
@@ -49,17 +58,29 @@ export function ChatInputBox({
         </div>
 
         <textarea
-          disabled={disabled}
+          disabled={disabled || isUploadingFiles}
           placeholder={placeholder}
           rows={7}
           value={value}
           onChange={(event) => onChange(event.target.value)}
         />
 
+        <AttachmentPicker
+          disabled={disabled || isUploadingFiles}
+          files={files}
+          isUploading={isUploadingFiles}
+          onAddFiles={onAddFiles}
+          onRemoveFile={onRemoveFile}
+        />
+
         <div className="chat-input-footer">
           <span className="chat-input-hint">{inputHint}</span>
-          <button className="submit-button" disabled={disabled || !trimmedValue} type="submit">
-            {disabled ? '正在创建...' : '开始对话'}
+          <button
+            className="submit-button"
+            disabled={disabled || isUploadingFiles || !trimmedValue}
+            type="submit"
+          >
+            {disabled || isUploadingFiles ? '正在创建...' : '开始对话'}
           </button>
         </div>
 
@@ -68,14 +89,14 @@ export function ChatInputBox({
             <span>匹配论文数</span>
             <div className="count-stepper">
               <button
-                disabled={disabled}
+                disabled={disabled || isUploadingFiles}
                 type="button"
                 onClick={() => onPaperCountChange(Math.max(1, paperCount - 1))}
               >
                 -
               </button>
               <input
-                disabled={disabled}
+                disabled={disabled || isUploadingFiles}
                 min={1}
                 step={1}
                 type="number"
@@ -83,7 +104,7 @@ export function ChatInputBox({
                 onChange={(event) => onPaperCountChange(Number(event.target.value))}
               />
               <button
-                disabled={disabled}
+                disabled={disabled || isUploadingFiles}
                 type="button"
                 onClick={() => onPaperCountChange(paperCount + 1)}
               >
@@ -95,7 +116,7 @@ export function ChatInputBox({
           <label className="home-option-toggle">
             <input
               checked={showReasoning}
-              disabled={disabled}
+              disabled={disabled || isUploadingFiles}
               type="checkbox"
               onChange={(event) => onShowReasoningChange(event.target.checked)}
             />
@@ -107,7 +128,7 @@ export function ChatInputBox({
               <button
                 key={option}
                 type="button"
-                disabled={disabled}
+                disabled={disabled || isUploadingFiles}
                 className={paperCount === option ? 'paper-preset paper-preset-active' : 'paper-preset'}
                 onClick={() => onPaperCountChange(option)}
               >

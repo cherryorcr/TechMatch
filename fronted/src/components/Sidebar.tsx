@@ -15,6 +15,7 @@ type SidebarIconKey =
   | 'apps'
   | 'competitions'
   | 'courses'
+  | 'files'
   | 'history'
   | 'home'
   | 'knowledge'
@@ -44,6 +45,15 @@ function SidebarIcon({ iconKey }: { iconKey: SidebarIconKey }) {
           <path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" />
           <path d="M4.5 5.5v4h4" />
           <path d="M12 8.4v4.1l2.8 1.7" />
+        </svg>
+      );
+    case 'files':
+      return (
+        <svg aria-hidden="true" className="sidebar-icon" viewBox="0 0 24 24">
+          <path d="M7 4.8h6l4 4v10.4H7z" />
+          <path d="M13 4.8v4h4" />
+          <path d="M9.6 13h4.8" />
+          <path d="M12 10.6v4.8" />
         </svg>
       );
     case 'subscription':

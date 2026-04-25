@@ -3,12 +3,13 @@ import { AppShell } from '../layout/AppShell';
 import { navigationItems } from '../mock/navigation';
 import { AuthPage } from '../pages/AuthPage';
 import { ChatPage } from '../pages/ChatPage';
+import { FileCenterPage } from '../pages/FileCenterPage';
 import { HistoryPage } from '../pages/HistoryPage';
 import { HomePage } from '../pages/HomePage';
 import { PlaceholderPage } from '../pages/PlaceholderPage';
 
 const placeholderRoutes = navigationItems
-  .filter((item) => item.path !== '/' && item.path !== '/history')
+  .filter((item) => item.path !== '/' && item.path !== '/files' && item.path !== '/history')
   .map((item) => ({
     path: item.path.slice(1),
     element: (
@@ -36,6 +37,10 @@ export const router = createBrowserRouter([
       {
         path: 'history',
         element: <HistoryPage />,
+      },
+      {
+        path: 'files',
+        element: <FileCenterPage />,
       },
       {
         path: 'auth',

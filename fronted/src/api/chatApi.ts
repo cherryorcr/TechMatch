@@ -3,6 +3,8 @@ import type {
   CreateSessionPayload,
   SessionDetailResponse,
   SessionListResponse,
+  UploadFilesResponse,
+  UploadedFile,
 } from '../types/chat';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
@@ -93,5 +95,38 @@ export const chatApi = {
   },
   listSessions() {
     return request<SessionListResponse>('/chat/sessions');
+  },
+  getFileDownloadUrl(fileId: string) {
+    return joinUrl(API_BASE_URL, `/files/${encodeURIComponent(fileId)}/download`);
+  },
+  downloadFile(file: UploadedFile) {
+    const link = document.createElement('a');
+    link.href = chatApi.getFileDownloadUrl(file.id);
+    link.download = file.name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  },
+  async uploadFiles(files: File[]) {
+    const formData = new FormData();
+
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
+
+    const response = await fetch(joinUrl(API_BASE_URL, '/files'), {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+      },
+      body: formData,
+    });
+    const payload = await parseResponse(response);
+
+    if (!response.ok) {
+      throw new ApiError(getErrorMessage(payload, response.status), response.status);
+    }
+
+    return payload as UploadFilesResponse;
   },
 };

@@ -793,6 +793,9 @@ html[data-theme='light'] .session-chip,
 html[data-theme='light'] .prompt-card,
 html[data-theme='light'] .preview-card,
 html[data-theme='light'] .recommendation-item,
+html[data-theme='light'] .message-attachment-link,
+html[data-theme='light'] .attachment-draft-item,
+html[data-theme='light'] .file-library-item,
 html[data-theme='light'] .chat-bubble,
 html[data-theme='light'] .reasoning-block,
 html[data-theme='light'] .auth-secondary-button,
@@ -835,6 +838,9 @@ html[data-theme='light'] .brand-link-compact {
 
 html[data-theme='light'] .home-stage-panel,
 html[data-theme='light'] .recommendation-panel,
+html[data-theme='light'] .file-center-header,
+html[data-theme='light'] .file-upload-panel,
+html[data-theme='light'] .file-library-panel,
 html[data-theme='light'] .auth-card,
 html[data-theme='light'] .auth-side-panel {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(244, 248, 255, 0.9));
@@ -897,6 +903,7 @@ html[data-theme='light'] .input-frame::before {
 
 html[data-theme='light'] .hero-step-index,
 html[data-theme='light'] .home-command-pill,
+html[data-theme='light'] .file-center-metrics span,
 html[data-theme='light'] .hero-mode-badge {
   background: rgba(63, 111, 255, 0.08);
   border-color: rgba(63, 111, 255, 0.2);
@@ -1423,6 +1430,128 @@ html[data-theme='light'] .app-backdrop-glow-right {
   outline: none;
 }
 
+.attachment-picker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.attachment-picker input[type='file'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.attachment-picker-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.attachment-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 38px;
+  padding: 0.48rem 0.72rem;
+  border: 1px solid rgba(120, 168, 255, 0.24);
+  border-radius: 999px;
+  background: rgba(120, 168, 255, 0.09);
+  color: var(--accent-strong);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.attachment-trigger-disabled {
+  cursor: not-allowed;
+  opacity: 0.64;
+}
+
+.attachment-trigger-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.attachment-trigger-icon svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.attachment-picker-hint {
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+
+.attachment-draft-list,
+.message-attachment-list,
+.file-library-list {
+  display: grid;
+  gap: 0.62rem;
+}
+
+.attachment-draft-item,
+.message-attachment-link,
+.file-library-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.68rem 0.75rem;
+  border: 1px solid rgba(149, 169, 211, 0.14);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.attachment-draft-item div,
+.file-library-item div {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.attachment-draft-item strong,
+.file-library-item strong,
+.message-attachment-link span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-draft-item span,
+.file-library-item span,
+.message-attachment-link small {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.attachment-draft-item button,
+.download-button {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0.42rem 0.66rem;
+  border: 1px solid rgba(120, 168, 255, 0.22);
+  border-radius: 0.78rem;
+  background: rgba(120, 168, 255, 0.08);
+  color: var(--accent-strong);
+  font-weight: 700;
+  text-decoration: none;
+}
+
 .chat-input-footer,
 .section-caption,
 .recommendation-head,
@@ -1927,6 +2056,15 @@ html[data-theme='light'] .app-backdrop-glow-right {
   border-top: 1px solid rgba(149, 169, 211, 0.16);
 }
 
+.message-attachment-list {
+  margin-top: 0.72rem;
+}
+
+.message-attachment-link {
+  color: inherit;
+  text-decoration: none;
+}
+
 .chat-bubble-actions {
   display: flex;
   justify-content: flex-end;
@@ -2018,6 +2156,57 @@ html[data-theme='light'] .app-backdrop-glow-right {
   margin: 0.55rem 0 0;
   max-width: 720px;
   color: var(--text-muted);
+}
+
+.panel-heading,
+.file-center-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panel-heading h3,
+.file-center-header h2 {
+  margin: 0.35rem 0 0;
+  letter-spacing: -0.04em;
+}
+
+.file-center-header {
+  padding: 1.2rem 1.25rem;
+}
+
+.file-center-header p {
+  margin: 0.55rem 0 0;
+  max-width: 720px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.file-center-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: flex-end;
+}
+
+.file-center-metrics span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0.4rem 0.68rem;
+  border: 1px solid rgba(120, 168, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(120, 168, 255, 0.08);
+  color: var(--accent-strong);
+  font-size: 0.84rem;
+}
+
+.file-upload-panel,
+.file-library-panel {
+  display: grid;
+  gap: 1rem;
+  padding: 1.1rem 1.2rem;
 }
 
 .history-card-list {
@@ -2351,6 +2540,10 @@ html[data-theme='light'] .app-backdrop-glow-right {
   .chat-input-footer,
   .section-caption,
   .recommendation-head,
+  .panel-heading,
+  .file-center-header,
+  .file-library-item,
+  .attachment-draft-item,
   .chat-composer-footer,
   .auth-brand {
     flex-direction: column;
@@ -2360,9 +2553,17 @@ html[data-theme='light'] .app-backdrop-glow-right {
   .home-option-field,
   .home-option-toggle,
   .submit-button,
+  .download-button,
+  .attachment-trigger,
+  .attachment-draft-item button,
   .chat-composer-footer button {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .attachment-picker-head,
+  .file-center-metrics {
+    width: 100%;
   }
 
   .home-options-row {

@@ -47,6 +47,15 @@ type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
   "role": "user",
   "content": "我们希望围绕固态电池产业化需求匹配相关论文和专利",
   "meta": "内部产业用户模式",
+  "attachments": [
+    {
+      "id": "file-001",
+      "name": "技术需求说明.pdf",
+      "size": 245760,
+      "mimeType": "application/pdf",
+      "uploadedAt": 1713772790000
+    }
+  ],
   "reasoning": "可选，仅 assistant 消息在需要时返回"
 }
 ```
@@ -57,9 +66,30 @@ type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
 - `role`: `"user"` 或 `"assistant"`
 - `content`: string，消息正文
 - `meta`: string，消息来源说明
+- `attachments`: `UploadedFile[]`，可选，消息关联文件
 - `reasoning`: string，可选，思考过程
 
-### 2.4 `ChatSession`
+### 2.4 `UploadedFile`
+
+```json
+{
+  "id": "file-001",
+  "name": "技术需求说明.pdf",
+  "size": 245760,
+  "mimeType": "application/pdf",
+  "uploadedAt": 1713772790000
+}
+```
+
+字段说明：
+
+- `id`: string，文件 ID
+- `name`: string，原始文件名
+- `size`: number，文件大小，单位 byte
+- `mimeType`: string，文件 MIME 类型
+- `uploadedAt`: number，上传时间，毫秒级时间戳
+
+### 2.5 `ChatSession`
 
 ```json
 {
@@ -102,7 +132,7 @@ type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
 - `createdAt`: number，会话创建时间
 - `updatedAt`: number，会话更新时间
 
-### 2.5 `ChatSessionSummary`
+### 2.6 `ChatSessionSummary`
 
 用于历史列表、首页最近会话、左侧边栏最近会话。
 
@@ -121,7 +151,7 @@ type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
 }
 ```
 
-### 2.6 `ContextualRecommendationState`
+### 2.7 `ContextualRecommendationState`
 
 ```json
 {
@@ -242,7 +272,8 @@ type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
     "paperCount": 5,
     "showReasoning": false
   },
-  "prompt": "我们希望围绕固态电池产业化需求匹配相关论文和专利"
+  "prompt": "我们希望围绕固态电池产业化需求匹配相关论文和专利",
+  "fileIds": ["file-001"]
 }
 ```
 
@@ -296,6 +327,7 @@ type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
 
 - 必须同步返回首轮 assistant 消息
 - 必须同步返回完整 `recommendationPanel`
+- `fileIds` 可选；若传入，后端应将文件作为本轮用户消息附件上下文，并可在 `session.messages[].attachments` 中返回对应文件元信息
 
 ### 3.3 获取会话详情
 
@@ -371,7 +403,8 @@ type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
 
 ```json
 {
-  "prompt": "优先看近三年的论文，最好有可转化专利"
+  "prompt": "优先看近三年的论文，最好有可转化专利",
+  "fileIds": ["file-002"]
 }
 ```
 
@@ -438,6 +471,58 @@ type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
 
 - 返回值必须是更新后的完整会话，而不是只返回新增消息
 - 返回值必须是更新后的完整推荐面板，而不是增量 patch
+- `fileIds` 可选；若传入，后端应将文件作为本轮用户消息附件上下文，并可在 `session.messages[].attachments` 中返回对应文件元信息
+
+### 3.5 上传文件
+
+- 方法：`POST`
+- 路径：`/api/files`
+- 用途：
+  - 首页创建会话前上传附件
+  - 聊天页发送追问前上传附件
+  - 文件工作区独立上传文件
+
+#### 请求
+
+请求类型：`multipart/form-data`
+
+字段：
+
+- `files`: File，可重复字段，支持一次上传多个文件
+
+#### 成功响应
+
+```json
+{
+  "files": [
+    {
+      "id": "file-001",
+      "name": "技术需求说明.pdf",
+      "size": 245760,
+      "mimeType": "application/pdf",
+      "uploadedAt": 1713772790000
+    }
+  ]
+}
+```
+
+### 3.6 下载文件
+
+- 方法：`GET`
+- 路径：`/api/files/:fileId/download`
+- 用途：
+  - 聊天消息附件下载
+  - 文件工作区下载
+
+#### 路径参数
+
+- `fileId`: string，文件 ID
+
+#### 成功响应
+
+- 返回文件流
+- 建议设置 `Content-Type`
+- 建议设置 `Content-Disposition: attachment; filename="原始文件名"`
 
 ## 4. 错误响应约定
 
@@ -469,6 +554,10 @@ type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
 - `POST /api/chat/sessions` 可返回完整 `session + recommendationPanel`
 - `GET /api/chat/sessions/:sessionId` 刷新后仍能恢复完整聊天内容
 - `POST /api/chat/sessions/:sessionId/messages` 会返回更新后的完整会话
+- `POST /api/files` 可接收 `files` 字段并返回文件元信息
+- `GET /api/files/:fileId/download` 可返回对应文件流
+- 创建会话和追加消息接口可接收可选 `fileIds`
+- 消息关联文件时可在 `messages[].attachments` 返回文件元信息
 - 所有 `recommendationPanel` 响应都包含 `scholars/papers/institutions/directions`
 - 所有时间字段为毫秒级时间戳
 - 返回 JSON 时 `Content-Type` 为 `application/json`

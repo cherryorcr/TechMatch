@@ -14,12 +14,17 @@ import type {
   ChatSessionSummary,
   ContextualRecommendationState,
   CreateSessionPayload,
+  UploadedFile,
 } from '../types/chat';
 
 interface ChatSessionsContextValue {
   sessionSummaries: ChatSessionSummary[];
   createSession: (params: CreateSessionPayload) => Promise<string>;
-  appendMessage: (params: { prompt: string; sessionId: string }) => Promise<void>;
+  appendMessage: (params: {
+    files?: UploadedFile[];
+    prompt: string;
+    sessionId: string;
+  }) => Promise<void>;
   getRecommendationPanel: (sessionId: string) => ContextualRecommendationState | undefined;
   getSessionById: (sessionId: string) => ChatSession | undefined;
   isAppendingMessage: (sessionId: string) => boolean;
@@ -59,10 +64,15 @@ function createOptimisticMessageId() {
   return `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function createOptimisticUserMessage(prompt: string, meta: string): ChatMessage {
+function createOptimisticUserMessage(
+  prompt: string,
+  meta: string,
+  attachments: UploadedFile[] = [],
+): ChatMessage {
   return {
     id: createOptimisticMessageId(),
     role: 'user',
+    attachments,
     content: prompt,
     meta,
     status: 'sending',
@@ -196,11 +206,11 @@ export function ChatSessionsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const appendMessage = useCallback(
-    async (params: { prompt: string; sessionId: string }) => {
-      const { prompt, sessionId } = params;
+    async (params: { files?: UploadedFile[]; prompt: string; sessionId: string }) => {
+      const { files = [], prompt, sessionId } = params;
       const currentSession = sessionById[sessionId];
       const optimisticMessage = currentSession
-        ? createOptimisticUserMessage(prompt, currentSession.modeLabel)
+        ? createOptimisticUserMessage(prompt, currentSession.modeLabel, files)
         : null;
       const optimisticSession =
         currentSession && optimisticMessage
@@ -225,7 +235,10 @@ export function ChatSessionsProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       try {
-        const response = await chatApi.appendMessage(sessionId, { prompt });
+        const response = await chatApi.appendMessage(sessionId, {
+          fileIds: files.map((file) => file.id),
+          prompt,
+        });
         setSessionById((current) => ({
           ...current,
           [sessionId]: response.session,
