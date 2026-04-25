@@ -32,6 +32,16 @@ export const navigationItems: NavigationItem[] = [
     group: 'primary',
   },
   {
+    id: 'files',
+    label: '文件',
+    shortLabel: 'FILE',
+    path: '/files',
+    summary: '上传资料、查看已上传文件并验证下载链路。',
+    highlights: ['文件上传', '下载验证', '聊天附件'],
+    iconKey: 'files',
+    group: 'primary',
+  },
+  {
     id: 'subscription',
     label: '订阅',
     shortLabel: 'SUB',

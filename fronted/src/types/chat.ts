@@ -10,9 +10,20 @@ export interface ChatMessage {
   role: 'assistant' | 'user';
   content: string;
   meta: string;
+  attachments?: ChatAttachment[];
   reasoning?: string;
   status?: 'sending' | 'failed';
 }
+
+export interface UploadedFile {
+  id: string;
+  name: string;
+  size: number;
+  mimeType: string;
+  uploadedAt: number;
+}
+
+export type ChatAttachment = UploadedFile;
 
 export interface ChatSession {
   id: string;
@@ -94,13 +105,19 @@ export interface ContextualRecommendationState {
 }
 
 export interface CreateSessionPayload {
+  fileIds?: string[];
   modeId: HomeModeId;
   options: MatchOptions;
   prompt: string;
 }
 
 export interface AppendMessagePayload {
+  fileIds?: string[];
   prompt: string;
+}
+
+export interface UploadFilesResponse {
+  files: UploadedFile[];
 }
 
 export interface SessionDetailResponse {

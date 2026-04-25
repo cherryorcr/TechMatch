@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { chatApi } from '../api/chatApi';
 import { ChatHero } from '../components/home/ChatHero';
 import { ChatInputBox } from '../components/home/ChatInputBox';
 import { ModeSwitcher } from '../components/home/ModeSwitcher';
@@ -19,6 +20,9 @@ export function HomePage() {
   const { createSession, error, isCreatingSession, sessionSummaries } = useChatSessions();
   const [activeMode, setActiveMode] = useState<HomeModeId>(defaultHomeMode);
   const [draft, setDraft] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const [paperCount, setPaperCount] = useState(defaultMatchOptions.paperCount);
   const [showReasoning, setShowReasoning] = useState(defaultMatchOptions.showReasoning);
 
@@ -46,6 +50,16 @@ export function HomePage() {
     setPaperCount(Math.max(1, Math.min(500, Math.floor(nextValue))));
   }
 
+  function handleAddFiles(files: File[]) {
+    setFileError(null);
+    setSelectedFiles((current) => [...current, ...files]);
+  }
+
+  function handleRemoveFile(index: number) {
+    setFileError(null);
+    setSelectedFiles((current) => current.filter((_, fileIndex) => fileIndex !== index));
+  }
+
   async function handleSubmit() {
     const trimmed = draft.trim();
 
@@ -53,8 +67,14 @@ export function HomePage() {
       return;
     }
 
+    setFileError(null);
+
     try {
+      setIsUploadingFiles(selectedFiles.length > 0);
+      const uploadedFiles =
+        selectedFiles.length > 0 ? (await chatApi.uploadFiles(selectedFiles)).files : [];
       const sessionId = await createSession({
+        fileIds: uploadedFiles.map((file) => file.id),
         modeId: activeMode,
         options: {
           paperCount,
@@ -63,11 +83,17 @@ export function HomePage() {
         prompt: trimmed,
       });
       setDraft('');
+      setSelectedFiles([]);
       navigate(`/chat/${sessionId}`);
-    } catch {
+    } catch (requestError) {
+      setFileError(requestError instanceof Error ? requestError.message : '上传文件或创建会话失败');
       return;
+    } finally {
+      setIsUploadingFiles(false);
     }
   }
+
+  const activeError = fileError || error;
 
   return (
     <div className="page-grid page-grid-home page-grid-home-single">
@@ -126,17 +152,21 @@ export function HomePage() {
               </div>
             </div>
 
-            {error ? <div className="status-banner status-banner-error">{error}</div> : null}
+            {activeError ? <div className="status-banner status-banner-error">{activeError}</div> : null}
 
             <ChatInputBox
               disabled={isCreatingSession}
+              files={selectedFiles}
               inputHint={currentMode.inputHint}
+              isUploadingFiles={isUploadingFiles}
               paperCount={paperCount}
               placeholder={currentMode.placeholder}
               showReasoning={showReasoning}
               value={draft}
+              onAddFiles={handleAddFiles}
               onChange={setDraft}
               onPaperCountChange={handlePaperCountChange}
+              onRemoveFile={handleRemoveFile}
               onShowReasoningChange={setShowReasoning}
               onSubmit={handleSubmit}
             />

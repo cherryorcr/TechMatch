@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
-import { ApiError } from '../api/chatApi';
+import { ApiError, chatApi } from '../api/chatApi';
 import { ChatMarkdown } from '../components/chat/ChatMarkdown';
+import { AttachmentPicker } from '../components/files/AttachmentPicker';
 import { RecommendationPanel } from '../components/home/RecommendationPanel';
 import { useChatSessions } from '../context/ChatSessionsContext';
 import type { ChatMessage } from '../types/chat';
+import { formatFileSize } from '../utils/files';
 
 function getMessageStatusLabel(message: ChatMessage) {
   if (message.status === 'sending') {
@@ -32,6 +34,8 @@ export function ChatPage() {
   const session = getSessionById(sessionId);
   const recommendationPanel = getRecommendationPanel(sessionId);
   const [draft, setDraft] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const [missingSession, setMissingSession] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
   const threadRef = useRef<HTMLDivElement | null>(null);
@@ -87,20 +91,38 @@ export function ChatPage() {
 
     setPageError(null);
 
-    if (!nextPrompt) {
-      setDraft('');
-    }
-
     try {
+      setIsUploadingFiles(!nextPrompt && selectedFiles.length > 0);
+      const uploadedFiles =
+        !nextPrompt && selectedFiles.length > 0
+          ? (await chatApi.uploadFiles(selectedFiles)).files
+          : [];
       await appendMessage({
+        files: uploadedFiles,
         prompt,
         sessionId: session.id,
       });
+      if (!nextPrompt) {
+        setDraft('');
+        setSelectedFiles([]);
+      }
     } catch (requestError) {
       setPageError(
         requestError instanceof Error ? requestError.message : '发送消息失败',
       );
+    } finally {
+      setIsUploadingFiles(false);
     }
+  }
+
+  function handleAddFiles(files: File[]) {
+    setPageError(null);
+    setSelectedFiles((current) => [...current, ...files]);
+  }
+
+  function handleRemoveFile(index: number) {
+    setPageError(null);
+    setSelectedFiles((current) => current.filter((_, fileIndex) => fileIndex !== index));
   }
 
   if (missingSession) {
@@ -137,7 +159,7 @@ export function ChatPage() {
 
   const userTurnCount = session.messages.filter((message) => message.role === 'user').length;
   const activeError = pageError || error;
-  const sending = isAppendingMessage(session.id);
+  const sending = isAppendingMessage(session.id) || isUploadingFiles;
 
   return (
     <div className="chat-page">
@@ -188,6 +210,22 @@ export function ChatPage() {
 
                   <ChatMarkdown className="chat-markdown" content={message.content} />
 
+                  {message.attachments && message.attachments.length > 0 ? (
+                    <div className="message-attachment-list">
+                      {message.attachments.map((file) => (
+                        <a
+                          key={file.id}
+                          className="message-attachment-link"
+                          download={file.name}
+                          href={chatApi.getFileDownloadUrl(file.id)}
+                        >
+                          <span>{file.name}</span>
+                          <small>{formatFileSize(file.size)}</small>
+                        </a>
+                      ))}
+                    </div>
+                  ) : null}
+
                   {isFailedUserMessage ? (
                     <div className="chat-bubble-actions">
                       <button
@@ -226,6 +264,16 @@ export function ChatPage() {
                 rows={4}
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
+              />
+
+              <AttachmentPicker
+                disabled={isAppendingMessage(session.id)}
+                files={selectedFiles}
+                hint="附件会随本轮追问一起发送，用于补充论文、报告或需求材料。"
+                isUploading={isUploadingFiles}
+                label="添加附件"
+                onAddFiles={handleAddFiles}
+                onRemoveFile={handleRemoveFile}
               />
 
               <div className="chat-composer-footer">
