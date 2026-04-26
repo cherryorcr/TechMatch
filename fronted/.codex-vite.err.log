@@ -1,0 +1,12 @@
+[2m17:58:05[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/sessions[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[2m18:07:40[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/sessions[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[2m18:15:48[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/sessions[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)

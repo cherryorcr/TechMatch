@@ -5,6 +5,7 @@ import { ChatHero } from '../components/home/ChatHero';
 import { ChatInputBox } from '../components/home/ChatInputBox';
 import { ModeSwitcher } from '../components/home/ModeSwitcher';
 import { PromptSuggestions } from '../components/home/PromptSuggestions';
+import { RecommendedUniversities } from '../components/home/RecommendedUniversities';
 import { RecentSessions } from '../components/home/RecentSessions';
 import { useChatSessions } from '../context/ChatSessionsContext';
 import {
@@ -38,6 +39,13 @@ export function HomePage() {
         timestamp: '',
         prompt: '',
       })),
+    [sessionSummaries],
+  );
+  const academicHistoryText = useMemo(
+    () =>
+      sessionSummaries
+        .map((session) => `${session.title} ${session.latestMessage ?? ''} ${session.modeLabel}`)
+        .join('\n'),
     [sessionSummaries],
   );
 
@@ -202,6 +210,8 @@ export function HomePage() {
             ))}
           </div>
         </section>
+
+        {activeMode === 'academic' ? <RecommendedUniversities historyText={academicHistoryText} /> : null}
 
         {recentSessions.length > 0 ? (
           <RecentSessions
