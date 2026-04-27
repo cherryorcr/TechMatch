@@ -30,6 +30,22 @@ type SidebarIconKey =
 const HISTORY_SECTION_KEY = 'techmatch.sidebar.history.expanded';
 const WORKSPACE_SECTION_KEY = 'techmatch.sidebar.workspace.expanded';
 
+function getStorageItem(key: string) {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function setStorageItem(key: string, value: string) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Ignore storage failures in restricted browser contexts.
+  }
+}
+
 function SidebarIcon({ iconKey }: { iconKey: SidebarIconKey }) {
   switch (iconKey) {
     case 'home':
@@ -170,24 +186,24 @@ export function Sidebar({ collapsed, onToggle, onThemeToggle, theme }: SidebarPr
       return true;
     }
 
-    return window.localStorage.getItem(HISTORY_SECTION_KEY) !== '0';
+    return getStorageItem(HISTORY_SECTION_KEY) !== '0';
   });
   const [workspaceExpanded, setWorkspaceExpanded] = useState(() => {
     if (typeof window === 'undefined') {
       return false;
     }
 
-    return window.localStorage.getItem(WORKSPACE_SECTION_KEY) === '1';
+    return getStorageItem(WORKSPACE_SECTION_KEY) === '1';
   });
   const historyRouteActive =
     location.pathname === '/history' || location.pathname.startsWith('/chat/');
 
   useEffect(() => {
-    window.localStorage.setItem(HISTORY_SECTION_KEY, historyExpanded ? '1' : '0');
+    setStorageItem(HISTORY_SECTION_KEY, historyExpanded ? '1' : '0');
   }, [historyExpanded]);
 
   useEffect(() => {
-    window.localStorage.setItem(WORKSPACE_SECTION_KEY, workspaceExpanded ? '1' : '0');
+    setStorageItem(WORKSPACE_SECTION_KEY, workspaceExpanded ? '1' : '0');
   }, [workspaceExpanded]);
 
   return (

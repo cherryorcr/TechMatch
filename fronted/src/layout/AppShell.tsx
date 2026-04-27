@@ -8,18 +8,37 @@ const THEME_STORAGE_KEY = 'techmatch.theme.mode';
 
 type ThemeMode = 'dark' | 'light';
 
+function getStorageItem(key: string) {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function setStorageItem(key: string, value: string) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Ignore storage failures in restricted browser contexts.
+  }
+}
+
 function getInitialTheme(): ThemeMode {
   if (typeof window === 'undefined') {
     return 'dark';
   }
 
-  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+  const storedTheme = getStorageItem(THEME_STORAGE_KEY);
 
   if (storedTheme === 'dark' || storedTheme === 'light') {
     return storedTheme;
   }
 
-  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  return typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-color-scheme: light)').matches
+    ? 'light'
+    : 'dark';
 }
 
 export function AppShell() {
@@ -35,15 +54,15 @@ export function AppShell() {
       return false;
     }
 
-    return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === '1';
+    return getStorageItem(SIDEBAR_STORAGE_KEY) === '1';
   });
 
   useEffect(() => {
-    window.localStorage.setItem(SIDEBAR_STORAGE_KEY, sidebarCollapsed ? '1' : '0');
+    setStorageItem(SIDEBAR_STORAGE_KEY, sidebarCollapsed ? '1' : '0');
   }, [sidebarCollapsed]);
 
   useEffect(() => {
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    setStorageItem(THEME_STORAGE_KEY, theme);
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 

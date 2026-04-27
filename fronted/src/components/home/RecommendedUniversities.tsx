@@ -1,80 +1,136 @@
+import { useEffect, useMemo, useState } from 'react';
 import {
-  getAcademicUniversityLogoUrl,
-  getFeaturedAcademicInstitutions,
-} from '../../mock/academicUniversities';
+  getFeaturedResearchHighlights,
+  type ResearchHighlight,
+} from '../../mock/researchHighlights';
 
 export function RecommendedUniversities() {
-  const recommendedUniversities = getFeaturedAcademicInstitutions();
+  const recommendedHighlights = useMemo(() => getFeaturedResearchHighlights(8), []);
+  const [selectedHighlight, setSelectedHighlight] = useState<ResearchHighlight | null>(null);
+
+  useEffect(() => {
+    if (!selectedHighlight) {
+      return undefined;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setSelectedHighlight(null);
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedHighlight]);
 
   return (
     <section className="academic-recommendation-section" aria-labelledby="academic-recommendations-title">
       <div className="academic-section-head">
         <div>
           <span id="academic-recommendations-title" className="eyebrow">
-            高校 / 产业机构卡片
+            成果 / 专利卡片
           </span>
-          <h2>优先跟踪这些公开资料入口</h2>
+          <h2>优先浏览这些可转化线索</h2>
         </div>
         <p>
-          默认展示华中科技大学、西安交通大学、中国机械工业集团、中国轻工集团和中科曙光，卡片内链接指向官网、学院或科技创新入口。
+          覆盖青岛大学高价值专利与可转化成果、西安交通大学科技成果，以及中科曙光的先进计算能力，用于快速判断技术方向、成熟度和应用场景。
         </p>
       </div>
 
       <div className="academic-card-grid">
-        {recommendedUniversities.map((university) => (
-          <article key={university.id} className="academic-card">
+        {recommendedHighlights.map((highlight) => (
+          <button
+            key={highlight.id}
+            className="academic-card research-card"
+            type="button"
+            onClick={() => setSelectedHighlight(highlight)}
+          >
             <div className="academic-card-head">
-              <div className="academic-logo-mark" aria-hidden="true">
-                <img
-                  alt=""
-                  src={getAcademicUniversityLogoUrl(university.domain)}
-                  onError={(event) => {
-                    event.currentTarget.parentElement?.classList.add('academic-logo-mark-fallback');
-                    event.currentTarget.style.display = 'none';
-                  }}
-                />
-                <span>{university.logoMark}</span>
+              <div className="academic-logo-mark research-logo-mark" aria-hidden="true">
+                <span>{highlight.organization.slice(0, 2)}</span>
               </div>
               <div className="academic-card-title">
                 <span className="academic-card-kicker">
-                  {university.location} · {university.shortName}
+                  {highlight.organization} · {highlight.type}
                 </span>
-                <h3>{university.name}</h3>
+                <h3>{highlight.title}</h3>
               </div>
             </div>
 
-            <div className="academic-tag-list" aria-label={`${university.name}重点方向`}>
-              {university.tags.map((tag) => (
-                <span key={`${university.id}-${tag}`}>{tag}</span>
+            <div className="academic-tag-list" aria-label={`${highlight.title}重点方向`}>
+              <span>{highlight.domain}</span>
+              {highlight.tags.slice(0, 2).map((tag) => (
+                <span key={`${highlight.id}-${tag}`}>{tag}</span>
               ))}
             </div>
 
-            <p className="academic-card-focus">{university.description}</p>
+            <p className="academic-card-focus">{highlight.summary}</p>
 
-            <div className="academic-source-list">
-              {university.links.map((link) => (
-                <a
-                  key={`${university.id}-${link.label}`}
-                  className="academic-source-item"
-                  href={link.url}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  <div>
-                    <strong>{link.label}</strong>
-                    <span>{link.type}</span>
-                  </div>
-                  <span className="academic-source-arrow" aria-hidden="true">
-                    →
-                  </span>
-                </a>
-              ))}
+            <div className="research-card-meta">
+              <span>{highlight.maturity}</span>
+              <strong>查看详情</strong>
             </div>
-
-            <p className="academic-card-note">{university.accessNote}</p>
-          </article>
+          </button>
         ))}
       </div>
+
+      {selectedHighlight ? (
+        <div
+          className="research-detail-overlay"
+          onClick={() => setSelectedHighlight(null)}
+          role="presentation"
+        >
+          <section
+            aria-labelledby="research-detail-title"
+            aria-modal="true"
+            className="research-detail-modal"
+            role="dialog"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="research-detail-head">
+              <div>
+                <span className="eyebrow">
+                  {selectedHighlight.organization} · {selectedHighlight.type}
+                </span>
+                <h3 id="research-detail-title">{selectedHighlight.title}</h3>
+              </div>
+              <button
+                aria-label="关闭详情"
+                className="research-detail-close"
+                type="button"
+                onClick={() => setSelectedHighlight(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="academic-tag-list research-detail-tags">
+              <span>{selectedHighlight.domain}</span>
+              {selectedHighlight.tags.map((tag) => (
+                <span key={`${selectedHighlight.id}-detail-${tag}`}>{tag}</span>
+              ))}
+            </div>
+
+            <p className="research-detail-summary">{selectedHighlight.detail}</p>
+
+            <dl className="research-detail-facts">
+              <div>
+                <dt>应用场景</dt>
+                <dd>{selectedHighlight.application}</dd>
+              </div>
+              <div>
+                <dt>成熟度 / 备注</dt>
+                <dd>{selectedHighlight.maturity}</dd>
+              </div>
+              <div>
+                <dt>资料来源</dt>
+                <dd>{selectedHighlight.source}</dd>
+              </div>
+            </dl>
+          </section>
+        </div>
+      ) : null}
     </section>
   );
 }
