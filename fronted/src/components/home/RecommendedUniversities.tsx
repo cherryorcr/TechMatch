@@ -1,27 +1,22 @@
 import {
-  academicUniversityRecommendations,
   getAcademicUniversityLogoUrl,
-  getRecommendedAcademicUniversities,
+  getFeaturedAcademicInstitutions,
 } from '../../mock/academicUniversities';
 
-interface RecommendedUniversitiesProps {
-  historyText: string;
-}
-
-export function RecommendedUniversities({ historyText }: RecommendedUniversitiesProps) {
-  const recommendedUniversities = getRecommendedAcademicUniversities(historyText, 6);
+export function RecommendedUniversities() {
+  const recommendedUniversities = getFeaturedAcademicInstitutions();
 
   return (
     <section className="academic-recommendation-section" aria-labelledby="academic-recommendations-title">
       <div className="academic-section-head">
         <div>
           <span id="academic-recommendations-title" className="eyebrow">
-            推荐高校 / 科研机构
+            高校 / 产业机构卡片
           </span>
-          <h2>先从这些公开资料入口建立机构画像</h2>
+          <h2>优先跟踪这些公开资料入口</h2>
         </div>
         <p>
-          已纳入 {academicUniversityRecommendations.length} 所 985 高校作为候选库，并根据历史会话推荐 6 所。没有历史会话时会展示默认样本。
+          默认展示华中科技大学、西安交通大学、中国机械工业集团、中国轻工集团和中科曙光，卡片内链接指向官网、学院或科技创新入口。
         </p>
       </div>
 

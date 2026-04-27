@@ -840,6 +840,8 @@ html[data-theme='light'] .brand-link-compact {
 
 html[data-theme='light'] .home-stage-panel,
 html[data-theme='light'] .recommendation-panel,
+html[data-theme='light'] .chat-page,
+html[data-theme='light'] .transcript-panel,
 html[data-theme='light'] .file-center-header,
 html[data-theme='light'] .file-upload-panel,
 html[data-theme='light'] .file-library-panel,

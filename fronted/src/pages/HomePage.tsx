@@ -41,14 +41,6 @@ export function HomePage() {
       })),
     [sessionSummaries],
   );
-  const academicHistoryText = useMemo(
-    () =>
-      sessionSummaries
-        .map((session) => `${session.title} ${session.latestMessage ?? ''} ${session.modeLabel}`)
-        .join('\n'),
-    [sessionSummaries],
-  );
-
   function handlePaperCountChange(nextValue: number) {
     if (!Number.isFinite(nextValue)) {
       setPaperCount(1);
@@ -189,6 +181,8 @@ export function HomePage() {
           <PromptSuggestions suggestions={currentMode.suggestions} onSelect={setDraft} />
         </section>
 
+        <RecommendedUniversities />
+
         <section className="panel home-preview-panel">
           <div className="section-caption">
             <span className="eyebrow">开始前可先锁定</span>
@@ -210,8 +204,6 @@ export function HomePage() {
             ))}
           </div>
         </section>
-
-        {activeMode === 'academic' ? <RecommendedUniversities historyText={academicHistoryText} /> : null}
 
         {recentSessions.length > 0 ? (
           <RecentSessions

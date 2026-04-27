@@ -372,14 +372,14 @@ export const academicUniversityRecommendations: AcademicUniversityRecommendation
     logoMark: '华科',
     location: '武汉',
     domain: 'www.hust.edu.cn',
-    tags: ['工科成果', '医工交叉', '技术转移'],
-    keywords: ['人工智能', '机械', '光电', '医学', '能源', '材料', '技术转移', '湖北', '武汉'],
-    description: '适合作为综合工科高校样本，优先跟踪技术转移、成果转化和校企联合研发线索。',
-    accessNote: '建议先抓取成果转化公示和技术转移动态，再补学院专家页与公开专利。',
+    tags: ['智能制造', '机械工程', '技术转移'],
+    keywords: ['智能制造', '机械', '机器人', '数控', '光电', '材料', '技术转移', '湖北', '武汉'],
+    description: '机械科学与工程学院在机械制造、智能装备、机器人化智能制造等方向资料集中，适合跟踪高端装备、数字化设计与制造、校企联合研发线索。',
+    accessNote: '建议从机械学院、国家技术转移中心和公开科研平台入口切入，再补专家团队、论文专利和合作案例。',
     links: [
       { label: '学校官网', type: '官方入口', url: 'https://www.hust.edu.cn/' },
+      { label: '机械科学与工程学院', type: '学院入口', url: 'https://mse.hust.edu.cn/' },
       { label: '国家技术转移中心', type: '成果转化', url: 'https://iat.hust.edu.cn/index.htm' },
-      { label: '成果转化管理办法', type: '政策资料', url: 'https://iat.hust.edu.cn/info/1046/1659.htm' },
     ],
   }),
   createUniversity({
@@ -485,14 +485,65 @@ export const academicUniversityRecommendations: AcademicUniversityRecommendation
     logoMark: '西交',
     location: '西安',
     domain: 'www.xjtu.edu.cn',
-    tags: ['能源动力', '装备制造', '科技成果'],
-    keywords: ['能源', '动力', '装备', '机械', '电气', '材料', '成果转化', '陕西', '西安'],
-    description: '技术转移资料相对集中，适合做“成果清单 + 技术经纪人 + 转孵化”类型的机构画像。',
-    accessNote: '建议优先解析成果汇编，再把动态新闻中的产业合作案例作为补充证据。',
+    tags: ['机械工程', '高端装备', '成果转化'],
+    keywords: ['能源', '动力', '装备', '机械', '智能制造', '增材制造', '成果转化', '陕西', '西安'],
+    description: '机械工程学院聚焦航空航天、机器人与智能系统、先进制造、精密工程等方向，技术转移资料适合整理成“成果清单 + 团队能力 + 转化路径”。',
+    accessNote: '建议优先解析机械学院科研方向和技术转移中心成果资料，再把校企合作新闻作为补充证据。',
     links: [
       { label: '学校官网', type: '官方入口', url: 'https://www.xjtu.edu.cn/' },
+      { label: '机械工程学院', type: '学院入口', url: 'https://mec.xjtu.edu.cn/' },
       { label: '国家技术转移中心', type: '成果转化', url: 'https://tlo.xjtu.edu.cn/' },
-      { label: '科技成果汇编', type: '成果资料', url: 'https://tlo.xjtu.edu.cn/info/1020/4481.htm' },
+    ],
+  }),
+  createUniversity({
+    id: 'sinomach',
+    name: '中国机械工业集团',
+    shortName: 'SINOMACH',
+    logoMark: '国机',
+    location: '北京',
+    domain: 'www.sinomach.com.cn',
+    tags: ['先进装备', '产业基础', '智能制造'],
+    keywords: ['机械工业', '先进装备', '智能制造', '农林机械', '重型装备', '能源环保装备', '工程设计', '国机'],
+    description: '国机集团覆盖智能制造及设备、农林机械、重型装备、能源环保装备、关键基础零部件等机械工业主要领域，适合作为产业需求和央企研发平台样本。',
+    accessNote: '建议从科技创新、技术领域和研发服务平台页建立产业能力图谱，再关联所属企业与具体装备需求。',
+    links: [
+      { label: '集团官网', type: '官方入口', url: 'https://www.sinomach.com.cn/' },
+      { label: '科技创新', type: '科技总览', url: 'https://www.sinomach.com.cn/kjcx/' },
+      { label: '科技总览', type: '研发平台', url: 'https://www.sinomach.com.cn/kjcx/kjzl/' },
+    ],
+  }),
+  createUniversity({
+    id: 'sinolight',
+    name: '中国轻工集团',
+    shortName: 'SINOLIGHT',
+    logoMark: '中轻',
+    location: '北京',
+    domain: 'www.sinolight.cn',
+    tags: ['轻工科技', '纸基材料', '智能制造'],
+    keywords: ['轻工', '造纸', '食品发酵', '日化', '皮革', '工程服务', '智能制造', '保利中轻'],
+    description: '中轻集团覆盖科研与产业化、工程全过程服务、智能制造等业务，旗下造纸、食品发酵、日化、皮革制鞋等研究院适合做轻工科技成果与行业场景匹配。',
+    accessNote: '建议从业务与产品、科研与产业化领域和集团网站群入口拆分子机构，再按纸基材料、食品发酵、日化和智能装备建立专题。',
+    links: [
+      { label: '集团官网', type: '官方入口', url: 'https://www.sinolight.cn/' },
+      { label: '科研与产业化', type: '业务板块', url: 'https://www.sinolight.cn/4150.html' },
+      { label: '集团概况', type: '机构资料', url: 'https://www.sinolight.cn/1381.html' },
+    ],
+  }),
+  createUniversity({
+    id: 'sugon',
+    name: '中科曙光',
+    shortName: 'SUGON',
+    logoMark: '曙光',
+    location: '天津 / 北京',
+    domain: 'www.sugon.com',
+    tags: ['高性能计算', '智能计算', '数据中心'],
+    keywords: ['高性能计算', '智能计算', '算力', '存储', '云计算', '数据中心', '制造业', '科研'],
+    description: '中科曙光官网产品与解决方案覆盖高性能计算、存储、云计算、智能计算、制造业解决方案等方向，适合做算力底座和科研算力需求匹配。',
+    accessNote: '建议从产品、智能计算和行业解决方案页拆分能力标签，再关联高校科研、制造业数字化和数据中心场景。',
+    links: [
+      { label: '公司官网', type: '官方入口', url: 'https://www.sugon.com/' },
+      { label: '智能计算', type: '产品方向', url: 'https://www.sugon.com/' },
+      { label: '制造业方案', type: '行业场景', url: 'https://www.sugon.com/' },
     ],
   }),
   createUniversity({
@@ -533,10 +584,24 @@ export const academicUniversityRecommendations: AcademicUniversityRecommendation
   }),
 ];
 
-const defaultRecommendedIds = ['hust', 'xjtu', 'sjtu', 'ouc', 'tsinghua', 'zju'];
+export const featuredAcademicInstitutionIds = [
+  'hust',
+  'xjtu',
+  'sinomach',
+  'sinolight',
+  'sugon',
+];
+
+const defaultRecommendedIds = featuredAcademicInstitutionIds;
 
 export function getAcademicUniversityLogoUrl(domain: string) {
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=96`;
+}
+
+export function getFeaturedAcademicInstitutions() {
+  return featuredAcademicInstitutionIds
+    .map((id) => academicUniversityRecommendations.find((university) => university.id === id))
+    .filter((university): university is AcademicUniversityRecommendation => Boolean(university));
 }
 
 export function getRecommendedAcademicUniversities(historyText: string, limit = 6) {
