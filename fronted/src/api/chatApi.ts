@@ -17,7 +17,7 @@ import type {
   UploadedFile,
 } from '../types/chat';
 
-const PROCESS_API_BASE_URL = import.meta.env.VITE_PROCESS_API_BASE_URL || '';
+const PROCESS_API_BASE_URL = import.meta.env.VITE_PROCESS_API_BASE_URL || '/api';
 const SESSION_STORAGE_KEY = 'techmatch.process.sessions.v1';
 const DEFAULT_SUBJECT = 'engineer';
 
