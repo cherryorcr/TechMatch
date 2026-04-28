@@ -13,7 +13,7 @@
 
 ### 1.1 `/process` 适配说明
 
-当前前端聊天处理已调用后端 process 能力，默认路径为 `POST /api/process`。如果后端网关直接开放根路径 `/process`，可通过 `VITE_PROCESS_API_BASE_URL=""` 切回。前端不为 Mode 3 / Mode 4 新建 `/mode3` 或 `/mode4` 接口，会把页面会话结构保存在本地，并将每轮用户输入发送给 process 接口：
+当前前端聊天处理已调用后端 process 能力，默认先请求 `POST /api/process`，如果返回 `404/405` 会自动重试 `POST /paper-api/process`。如果后端网关直接开放根路径 `/process`，可通过 `VITE_PROCESS_API_BASE_URL=""` 切回。前端不为 Mode 3 / Mode 4 新建 `/mode3` 或 `/mode4` 接口，会把页面会话结构保存在本地，并将每轮用户输入发送给 process 接口：
 
 ```json
 {

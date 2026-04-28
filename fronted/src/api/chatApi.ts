@@ -17,7 +17,13 @@ import type {
   UploadedFile,
 } from '../types/chat';
 
-const PROCESS_API_BASE_URL = import.meta.env.VITE_PROCESS_API_BASE_URL || '/api';
+const configuredProcessApiBaseUrl = import.meta.env.VITE_PROCESS_API_BASE_URL as
+  | string
+  | undefined;
+const PROCESS_API_BASE_URLS =
+  configuredProcessApiBaseUrl === undefined
+    ? ['/api', '/paper-api']
+    : [configuredProcessApiBaseUrl];
 const SESSION_STORAGE_KEY = 'techmatch.process.sessions.v1';
 const DEFAULT_SUBJECT = 'engineer';
 
@@ -345,8 +351,12 @@ function buildRecommendationPanel(session: ChatSession, response?: ProcessRespon
   return panel;
 }
 
-async function requestProcess(payload: ProcessRequestPayload) {
-  const response = await fetch(joinUrl(PROCESS_API_BASE_URL, '/process'), {
+function shouldTryNextProcessEndpoint(status: number) {
+  return status === 404 || status === 405;
+}
+
+async function requestProcessFromBaseUrl(baseUrl: string, payload: ProcessRequestPayload) {
+  const response = await fetch(joinUrl(baseUrl, '/process'), {
     method: 'POST',
     headers: {
       Accept: 'application/json',
@@ -356,19 +366,43 @@ async function requestProcess(payload: ProcessRequestPayload) {
   });
   const parsed = (await parseResponse(response)) as ProcessResponse | null;
 
-  if (!response.ok && response.status !== 207) {
-    throw new ApiError(getErrorMessage(parsed, response.status), response.status);
+  return { parsed, response };
+}
+
+async function requestProcess(payload: ProcessRequestPayload) {
+  let lastParsed: ProcessResponse | null = null;
+  let lastStatus = 0;
+
+  for (const [index, baseUrl] of PROCESS_API_BASE_URLS.entries()) {
+    const { parsed, response } = await requestProcessFromBaseUrl(baseUrl, payload);
+    lastParsed = parsed;
+    lastStatus = response.status;
+
+    if (
+      !response.ok &&
+      response.status !== 207 &&
+      shouldTryNextProcessEndpoint(response.status) &&
+      index < PROCESS_API_BASE_URLS.length - 1
+    ) {
+      continue;
+    }
+
+    if (!response.ok && response.status !== 207) {
+      throw new ApiError(getErrorMessage(parsed, response.status), response.status);
+    }
+
+    if (!parsed || typeof parsed !== 'object') {
+      throw new ApiError('后端响应格式不正确', response.status);
+    }
+
+    if (hasBusinessError(parsed) && response.status !== 207) {
+      throw new ApiError(getProcessErrorMessage(parsed), response.status);
+    }
+
+    return parsed;
   }
 
-  if (!parsed || typeof parsed !== 'object') {
-    throw new ApiError('后端响应格式不正确', response.status);
-  }
-
-  if (hasBusinessError(parsed) && response.status !== 207) {
-    throw new ApiError(getProcessErrorMessage(parsed), response.status);
-  }
-
-  return parsed;
+  throw new ApiError(getErrorMessage(lastParsed, lastStatus), lastStatus);
 }
 
 export const chatApi = {
@@ -481,18 +515,35 @@ export const chatApi = {
     link.remove();
   },
   async getConfig() {
-    const response = await fetch(joinUrl(PROCESS_API_BASE_URL, '/config'), {
-      headers: {
-        Accept: 'application/json',
-      },
-    });
-    const payload = await parseResponse(response);
+    let lastPayload: unknown = null;
+    let lastStatus = 0;
 
-    if (!response.ok) {
-      throw new ApiError(getErrorMessage(payload, response.status), response.status);
+    for (const [index, baseUrl] of PROCESS_API_BASE_URLS.entries()) {
+      const response = await fetch(joinUrl(baseUrl, '/config'), {
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+      const payload = await parseResponse(response);
+      lastPayload = payload;
+      lastStatus = response.status;
+
+      if (
+        !response.ok &&
+        shouldTryNextProcessEndpoint(response.status) &&
+        index < PROCESS_API_BASE_URLS.length - 1
+      ) {
+        continue;
+      }
+
+      if (!response.ok) {
+        throw new ApiError(getErrorMessage(payload, response.status), response.status);
+      }
+
+      return payload;
     }
 
-    return payload;
+    throw new ApiError(getErrorMessage(lastPayload, lastStatus), lastStatus);
   },
   async uploadFiles(files: File[]) {
     const uploadedFiles = files.map((file) => {
