@@ -4,12 +4,39 @@
 
 ## 1. 基本约定
 
-- 前端默认请求前缀：`/api`
+- 聊天处理接口：`/process`
 - 本地开发代理默认转发到：`http://localhost:8080`
 - 接口内容类型：`application/json`
 - 时间字段统一使用毫秒级时间戳 `number`
 - 字段命名统一使用 `camelCase`
 - 除 `GET /api/chat/sessions` 外，其余会话详情接口都必须返回完整的 `session + recommendationPanel`
+
+### 1.1 `/process` 适配说明
+
+当前前端聊天处理已直接调用后端 `POST /process`，不再为 Mode 3 / Mode 4 新建 `/mode3` 或 `/mode4` 接口。前端会把页面会话结构保存在本地，并将每轮用户输入发送给 `/process`：
+
+```json
+{
+  "mode": 3,
+  "session_id": "process-mode-3-xxx",
+  "message": "用户本轮输入",
+  "requirement": "首轮需求",
+  "subject": "engineer",
+  "top-k": 10,
+  "cot": false,
+  "if_topk": true
+}
+```
+
+模式映射：
+
+- `internal-industry` -> `mode: 0`
+- `external-expert` -> `mode: 1`
+- `academic` -> `mode: 2`
+- `deep-search` -> `mode: 3`
+- `tech-recommendation` -> `mode: 4`
+
+前端展示优先使用 `data.final_output`。Mode 4 会保留同一个 `session_id` 继续多轮请求，并根据 `data.stage === "chatting"` 或 `"completed"` 更新侧栏状态。HTTP `207` 会按可解析响应处理，不作为网络错误直接中断。
 
 ## 2. 枚举与对象模型
 
