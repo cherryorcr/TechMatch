@@ -1,4 +1,9 @@
-export type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
+export type HomeModeId =
+  | 'internal-industry'
+  | 'external-expert'
+  | 'academic'
+  | 'deep-search'
+  | 'tech-recommendation';
 
 export interface MatchOptions {
   paperCount: number;

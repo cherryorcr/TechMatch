@@ -58,12 +58,28 @@ const modeSignals: Record<HomeModeId, SignalGroup[]> = {
     { label: '机器人与智能制造', aliases: ['机器人', '智能制造', '自动化', '装备'] },
     { label: '重点实验室', aliases: ['实验室', '平台', '重点实验室', '工程中心'] },
   ],
+  'deep-search': [
+    { label: '需求拆解', aliases: ['需求', '问题', '目标', '场景', '指标'] },
+    { label: '论文检索', aliases: ['论文', '文献', 'paper', 'article', '综述'] },
+    { label: '研究脉络', aliases: ['路线', '脉络', '方法', '进展', '趋势'] },
+    { label: '实验指标', aliases: ['实验', '数据集', 'benchmark', '性能', '对比'] },
+    { label: '总结报告', aliases: ['总结', '报告', '归纳', '摘要', '结论'] },
+  ],
+  'tech-recommendation': [
+    { label: '需求追问', aliases: ['需求', '约束', '边界', '预算', '周期'] },
+    { label: '技术方案', aliases: ['方案', '架构', '技术路线', '路线图', '实施'] },
+    { label: '选型评估', aliases: ['选型', '框架', '平台', '模型', '工具'] },
+    { label: '落地路径', aliases: ['落地', '部署', '试点', '集成', '交付'] },
+    { label: '风险控制', aliases: ['风险', '成本', '安全', '合规', '维护'] },
+  ],
 };
 
 const defaultSignals: Record<HomeModeId, string[]> = {
   'internal-industry': ['固态电池', '工业机器人感知', '专利转化'],
   'external-expert': ['具身智能', '产业合作', '专利运营'],
   academic: ['新能源材料', '重点实验室', '机器人与智能制造'],
+  'deep-search': ['需求拆解', '论文检索', '研究脉络'],
+  'tech-recommendation': ['需求追问', '技术方案', '选型评估'],
 };
 
 const nextQuestionMap: Record<HomeModeId, string[]> = {
@@ -81,6 +97,16 @@ const nextQuestionMap: Record<HomeModeId, string[]> = {
     '你最关注机构的优势学科、代表成果还是团队平台？',
     '是否限定某个领域，例如新能源、材料或机器人？',
     '最终希望看到概览、成果清单，还是机构画像？',
+  ],
+  'deep-search': [
+    '这个需求最核心的研究问题、应用场景和评价指标分别是什么？',
+    '论文总结更关注方法路线、实验结果、产业启发，还是研究空白？',
+    '是否限定年份、学科方向、期刊会议级别或中英文来源？',
+  ],
+  'tech-recommendation': [
+    '当前需求的业务目标、使用对象和必须满足的硬约束是什么？',
+    '更希望得到架构选型、实施步骤、资源投入，还是风险清单？',
+    '是否已有技术栈、数据条件、部署环境或预算周期限制？',
   ],
 };
 
@@ -445,6 +471,246 @@ export const homeModes: Record<HomeModeId, HomeModeConfig> = {
       directions: ['新能源材料', '高分子材料', '生物制造', '机器人与智能制造', '重点实验室'],
     },
   },
+  'deep-search': {
+    id: 'deep-search',
+    label: 'Mode 3 深度搜索',
+    title: '从需求出发，生成可读的论文总结',
+    subtitle:
+      '面向“需求 -> 论文总结”的深度搜索流程，先拆解研究问题和检索边界，再组织论文脉络、方法比较和可复用结论。',
+    placeholder:
+      '请输入研究需求、业务问题、目标场景或希望总结的论文方向，例如“面向工业缺陷检测的多模态大模型方法综述”...',
+    inputHint:
+      '建议写清研究问题、应用场景、限定年份、评价指标和希望总结的侧重点，系统会先追问检索边界。',
+    suggestions: [
+      {
+        id: 'deep-search-1',
+        title: '需求转论文综述',
+        prompt:
+          '我想围绕工业缺陷检测中的多模态大模型做深度搜索，请先追问需求边界，再总结代表论文的方法路线和实验结论。',
+      },
+      {
+        id: 'deep-search-2',
+        title: '论文脉络梳理',
+        prompt:
+          '请基于“固态电池界面稳定性提升”这个需求，帮我梳理近五年论文脉络、核心方法和研究空白。',
+      },
+      {
+        id: 'deep-search-3',
+        title: '技术问题找文献',
+        prompt:
+          '我需要了解低成本机器人力控方案的论文进展，请先确认应用场景和评价指标，再生成论文总结。',
+      },
+    ],
+    previewSections: [
+      {
+        id: 'deep-search-preview-1',
+        title: '先说明什么',
+        items: ['研究需求或问题', '应用场景与评价指标', '年份 / 来源范围'],
+      },
+      {
+        id: 'deep-search-preview-2',
+        title: '系统会继续追问',
+        items: ['检索关键词边界', '论文总结侧重点', '是否需要方法对比'],
+      },
+      {
+        id: 'deep-search-preview-3',
+        title: '进入总结后会看到',
+        items: ['代表论文清单', '方法路线归纳', '研究空白与启发'],
+      },
+    ],
+    recommendations: {
+      scholars: [
+        {
+          id: 'deep-search-scholar-1',
+          title: '王澈 教授',
+          meta: '多模态学习与工业视觉 | 智能感知团队',
+          detail: '适合作为工业视觉、缺陷检测与多模态模型方向的论文脉络参照。',
+          keywords: ['论文检索', '实验指标'],
+        },
+        {
+          id: 'deep-search-scholar-2',
+          title: '许知 研究员',
+          meta: '能源材料文献计量 | 先进材料研究中心',
+          detail: '适合辅助整理材料方向论文的主题演进、方法聚类和研究空白。',
+          keywords: ['研究脉络', '总结报告'],
+        },
+        {
+          id: 'deep-search-scholar-3',
+          title: 'Lena Park',
+          meta: 'Robotics Survey Lab | Embodied AI',
+          detail: '适合围绕机器人控制与具身智能主题建立代表论文索引。',
+          keywords: ['论文检索', '研究脉络'],
+        },
+      ],
+      papers: [
+        {
+          id: 'deep-search-paper-1',
+          title: 'Multimodal Foundation Models for Industrial Visual Inspection',
+          meta: 'Pattern Recognition Survey, 2025',
+          detail: '适合作为工业缺陷检测需求下的方法分类、数据集和实验指标总结入口。',
+          keywords: ['论文检索', '实验指标'],
+        },
+        {
+          id: 'deep-search-paper-2',
+          title: 'Interface Stabilization Strategies in Solid-State Batteries',
+          meta: 'Energy Materials Review, 2024',
+          detail: '适合梳理固态电池界面稳定性提升的研究路线和关键实验结论。',
+          keywords: ['研究脉络', '总结报告'],
+        },
+        {
+          id: 'deep-search-paper-3',
+          title: 'Low-Cost Force Control for Collaborative Robots',
+          meta: 'Robotics Methods, 2025',
+          detail: '适合总结机器人力控方案的硬件约束、控制方法和性能对比。',
+          keywords: ['需求拆解', '实验指标'],
+        },
+      ],
+      institutions: [
+        {
+          id: 'deep-search-inst-1',
+          title: '工业视觉文献分析工作组',
+          meta: '优势：论文聚类、数据集与指标对照',
+          detail: '适合把需求转化为可搜索关键词、代表论文集合和方法对比表。',
+          keywords: ['论文检索', '实验指标'],
+        },
+        {
+          id: 'deep-search-inst-2',
+          title: '能源材料综述协作平台',
+          meta: '优势：材料方向研究脉络梳理',
+          detail: '适合沉淀文献路线图、核心结论和后续可验证假设。',
+          keywords: ['研究脉络', '总结报告'],
+        },
+        {
+          id: 'deep-search-inst-3',
+          title: '机器人方法评测中心',
+          meta: '优势：控制算法、数据集与 benchmark 对比',
+          detail: '适合围绕工程需求提炼论文中的可落地方法和验证指标。',
+          keywords: ['需求拆解', '实验指标'],
+        },
+      ],
+      directions: ['需求拆解', '论文检索', '研究脉络', '实验指标', '总结报告'],
+    },
+  },
+  'tech-recommendation': {
+    id: 'tech-recommendation',
+    label: 'Mode 4 技术推荐',
+    title: '通过需求追问，形成可执行技术方案',
+    subtitle:
+      '面向“需求追问 -> 技术方案”的推荐流程，先确认业务目标、约束和资源条件，再输出架构选型、实施路径与风险控制建议。',
+    placeholder:
+      '请输入业务需求、已有技术栈、数据条件、预算周期或希望解决的技术问题，例如“搭建企业内部科研成果知识库问答系统”...',
+    inputHint:
+      '建议写清使用对象、关键流程、数据来源、部署环境和必须满足的约束，系统会先补齐方案设计所需条件。',
+    suggestions: [
+      {
+        id: 'tech-rec-1',
+        title: '科研知识库方案',
+        prompt:
+          '我们想搭建企业内部科研成果知识库问答系统，请先追问数据、权限和使用场景，再推荐技术方案。',
+      },
+      {
+        id: 'tech-rec-2',
+        title: '智能匹配系统选型',
+        prompt:
+          '请围绕论文、专利与企业需求智能匹配系统做需求追问，并给出可落地的技术架构和实施步骤。',
+      },
+      {
+        id: 'tech-rec-3',
+        title: '生产质检 AI 方案',
+        prompt:
+          '我们要在生产质检环节引入 AI 识别能力，请先确认现场约束，再推荐模型、数据和部署方案。',
+      },
+    ],
+    previewSections: [
+      {
+        id: 'tech-rec-preview-1',
+        title: '先说明什么',
+        items: ['业务目标和用户', '数据与系统现状', '预算周期和约束'],
+      },
+      {
+        id: 'tech-rec-preview-2',
+        title: '系统会继续追问',
+        items: ['部署环境', '安全合规要求', '评估指标与验收口径'],
+      },
+      {
+        id: 'tech-rec-preview-3',
+        title: '进入推荐后会看到',
+        items: ['技术架构', '实施里程碑', '风险与备选方案'],
+      },
+    ],
+    recommendations: {
+      scholars: [
+        {
+          id: 'tech-rec-scholar-1',
+          title: '方案架构顾问画像',
+          meta: '企业 AI 应用架构 | 知识库与智能检索',
+          detail: '适合把需求拆成数据治理、检索增强、权限控制和应用集成几个模块。',
+          keywords: ['技术方案', '选型评估'],
+        },
+        {
+          id: 'tech-rec-scholar-2',
+          title: '工程落地顾问画像',
+          meta: 'MLOps 与私有化部署 | 交付实施',
+          detail: '适合评估部署环境、运维成本、监控闭环和分阶段上线节奏。',
+          keywords: ['落地路径', '风险控制'],
+        },
+        {
+          id: 'tech-rec-scholar-3',
+          title: '数据治理顾问画像',
+          meta: '权限、质量与合规 | 企业数据平台',
+          detail: '适合处理多源数据接入、敏感信息边界和知识更新机制。',
+          keywords: ['需求追问', '风险控制'],
+        },
+      ],
+      papers: [
+        {
+          id: 'tech-rec-paper-1',
+          title: 'RAG 知识库技术方案',
+          meta: '数据接入 + 向量检索 + 权限控制 + 评测闭环',
+          detail: '适合企业内部科研成果问答、文档检索和专家经验沉淀场景。',
+          keywords: ['技术方案', '选型评估'],
+        },
+        {
+          id: 'tech-rec-paper-2',
+          title: '论文专利需求匹配架构',
+          meta: '实体抽取 + 语义匹配 + 规则过滤 + 人工确认',
+          detail: '适合构建从需求理解到候选成果推荐的可解释匹配链路。',
+          keywords: ['技术方案', '落地路径'],
+        },
+        {
+          id: 'tech-rec-paper-3',
+          title: '生产质检 AI 落地方案',
+          meta: '数据采集 + 小样本训练 + 边缘部署 + 质量复盘',
+          detail: '适合现场约束强、数据逐步积累、需要先试点再扩展的质检场景。',
+          keywords: ['落地路径', '风险控制'],
+        },
+      ],
+      institutions: [
+        {
+          id: 'tech-rec-inst-1',
+          title: '企业知识库实施平台',
+          meta: '能力：文档治理、检索增强、权限集成',
+          detail: '适合从已有文档资产开始，快速搭建可评测、可迭代的问答系统。',
+          keywords: ['技术方案', '选型评估'],
+        },
+        {
+          id: 'tech-rec-inst-2',
+          title: '智能匹配系统试点环境',
+          meta: '能力：需求标签、成果画像、推荐评估',
+          detail: '适合先用小范围真实业务数据验证匹配效果，再扩展到多部门使用。',
+          keywords: ['需求追问', '落地路径'],
+        },
+        {
+          id: 'tech-rec-inst-3',
+          title: 'AI 质检边缘部署平台',
+          meta: '能力：产线接入、模型监控、异常复核',
+          detail: '适合强调稳定性、响应延迟和持续运维的工业现场。',
+          keywords: ['落地路径', '风险控制'],
+        },
+      ],
+      directions: ['需求追问', '技术方案', '选型评估', '落地路径', '风险控制'],
+    },
+  },
 };
 
 export const homeModeList = Object.values(homeModes);
@@ -517,6 +783,14 @@ function createReasoning(modeId: HomeModeId, prompt: string, options: MatchOptio
     return `当前处于${modeName}。系统会先通过第 ${turn} 轮追问理解论文与专利内容，再把成果能力与企业内部需求做反向匹配，论文候选规模控制在 Top ${options.paperCount}。当前提炼的成果焦点是：${createSessionTitle(prompt)}。`;
   }
 
+  if (modeId === 'deep-search') {
+    return `当前处于${modeName}。系统会先通过第 ${turn} 轮追问拆解研究需求和检索边界，再把代表论文控制在 Top ${options.paperCount} 范围内组织总结。当前提炼的搜索焦点是：${createSessionTitle(prompt)}。`;
+  }
+
+  if (modeId === 'tech-recommendation') {
+    return `当前处于${modeName}。系统会先通过第 ${turn} 轮追问明确业务目标、系统约束和资源条件，再生成技术架构、实施步骤和风险控制建议。当前提炼的方案焦点是：${createSessionTitle(prompt)}。`;
+  }
+
   return `当前处于${modeName}。系统会先通过第 ${turn} 轮追问明确机构名称与关注重点，再逐步整理其优势学科、代表成果和产出方向。当前提炼的查询焦点是：${createSessionTitle(prompt)}。`;
 }
 
@@ -584,6 +858,62 @@ export function buildAssistantReply(
     };
   }
 
+  if (modeId === 'deep-search' && userTurnCount === 1) {
+    return {
+      content:
+        '已收到你的深度搜索需求。为了把需求转成可用的论文总结，我先确认三点：\n1. 这个需求要回答的核心研究问题是什么？\n2. 更关注论文的方法路线、实验结果、产业启发，还是研究空白？\n3. 是否限定年份、论文来源、学科方向或关键词范围？\n\n你可以按条补充，我会先收敛检索边界，再进入论文总结。',
+      reasoning: options.showReasoning ? createReasoning(modeId, prompt, options, 1) : undefined,
+      summary: `${modeName}已进入需求拆解与检索边界澄清阶段。`,
+    };
+  }
+
+  if (modeId === 'deep-search' && userTurnCount === 2) {
+    return {
+      content:
+        `我已经拿到第二轮信息，现在继续补两项总结口径：\n1. 论文总结需要按主题脉络、方法类别、实验指标，还是代表论文逐篇展开？\n2. 最终希望输出摘要版、结构化表格，还是可直接用于汇报的综述段落？\n\n补完后我就可以围绕 Top ${options.paperCount} 篇代表论文组织总结。`,
+      reasoning: options.showReasoning ? createReasoning(modeId, prompt, options, 2) : undefined,
+      summary: '继续收敛论文总结的范围、结构和输出口径。',
+    };
+  }
+
+  if (modeId === 'deep-search') {
+    return {
+      content:
+        `目前信息已经足够进入论文总结阶段。我会优先围绕 Top ${options.paperCount} 篇代表论文，整理研究脉络、关键方法、实验指标和可复用结论。\n\n如果你愿意，我们还可以再补一轮，例如排除方向、目标期刊会议、中文 / 英文来源或是否需要对比表。`,
+      reasoning:
+        options.showReasoning ? createReasoning(modeId, prompt, options, userTurnCount) : undefined,
+      summary: '深度搜索已具备进入论文总结阶段的条件。',
+    };
+  }
+
+  if (modeId === 'tech-recommendation' && userTurnCount === 1) {
+    return {
+      content:
+        '已收到你的技术推荐需求。为了形成可执行方案，我先确认三点：\n1. 业务目标、使用对象和关键流程是什么？\n2. 目前已有的数据、系统、技术栈或部署环境是什么？\n3. 是否有预算、周期、安全合规、性能或运维方面的硬约束？\n\n你可以先补充最确定的信息，我会继续追问方案设计所需条件。',
+      reasoning: options.showReasoning ? createReasoning(modeId, prompt, options, 1) : undefined,
+      summary: `${modeName}已进入需求追问与方案边界澄清阶段。`,
+    };
+  }
+
+  if (modeId === 'tech-recommendation' && userTurnCount === 2) {
+    return {
+      content:
+        '我已经初步理解你的业务需求，现在继续确认两个关键点：\n1. 你更希望优先得到总体架构、技术选型、实施里程碑，还是成本与风险评估？\n2. 这个方案是用于概念验证、部门试点，还是准备进入正式生产环境？\n\n补完这一步后，我就能把需求拆成技术模块、实施路径和风险控制建议。',
+      reasoning: options.showReasoning ? createReasoning(modeId, prompt, options, 2) : undefined,
+      summary: '继续收敛技术方案的目标形态、交付阶段和实施约束。',
+    };
+  }
+
+  if (modeId === 'tech-recommendation') {
+    return {
+      content:
+        '目前信息已经足够进入技术方案推荐阶段。我会围绕目标架构、关键技术选型、实施步骤、资源投入和风险控制来组织方案。\n\n如果你愿意，我们还可以继续补充验收指标、已有供应商、数据规模、私有化要求或运维责任边界，这会让方案更可执行。',
+      reasoning:
+        options.showReasoning ? createReasoning(modeId, prompt, options, userTurnCount) : undefined,
+      summary: '技术推荐已具备进入方案生成阶段的条件。',
+    };
+  }
+
   if (modeId === 'academic' && userTurnCount === 1) {
     return {
       content:
@@ -631,6 +961,14 @@ function createClarifyingSummary(modeId: HomeModeId, signals: string[]) {
     return `已从成果描述中提取出 ${joinedSignals} 等能力关键词。继续补充成熟度和应用边界后，系统会反向推荐更匹配的企业需求与文献。`;
   }
 
+  if (modeId === 'deep-search') {
+    return `已从深度搜索需求中提取出 ${joinedSignals} 等检索线索。继续补充论文范围和总结口径后，系统会开始组织代表论文与研究脉络。`;
+  }
+
+  if (modeId === 'tech-recommendation') {
+    return `已从技术推荐需求中提取出 ${joinedSignals} 等方案线索。继续补充系统现状和约束条件后，系统会开始生成更可执行的技术方案。`;
+  }
+
   return `已识别出 ${joinedSignals} 等机构关注线索。继续补充机构名称、重点学科或团队信息后，系统会开始整理更具体的论文与机构画像。`;
 }
 
@@ -648,6 +986,14 @@ function createMatchingSummary(
 
   if (modeId === 'external-expert') {
     return `已根据成果描述中的 ${joinedSignals} 生成第一批反向匹配结果。当前优先展示可对接的企业需求场景、相关论文线索和合作机构，累计补充轮次 ${Math.max(userTurnCount - 1, 1)}。`;
+  }
+
+  if (modeId === 'deep-search') {
+    return `已根据对话中的 ${joinedSignals} 生成第一批论文总结线索。当前优先展示代表论文、方法路线和可复用结论，候选规模控制在 Top ${options.paperCount}。`;
+  }
+
+  if (modeId === 'tech-recommendation') {
+    return `已根据对话中的 ${joinedSignals} 生成第一版技术方案。当前优先展示方案模块、实施路径和风险控制建议，累计补充轮次 ${Math.max(userTurnCount - 1, 1)}。`;
   }
 
   return `已根据对话中的 ${joinedSignals} 整理第一批机构画像线索。当前优先展示代表论文、优势方向与相关平台，帮助你快速判断这家机构的强项。`;
@@ -725,6 +1071,18 @@ export function createSeedSessions(): ChatSession[] {
       modeId: 'academic',
       prompt: '我想了解新能源材料重点实验室的优势学科、成果产出和代表方向，请先通过多轮提问明确关注重点。',
       createdAt: now - 1000 * 60 * 60 * 52,
+    },
+    {
+      id: 'seed-deep-search',
+      modeId: 'deep-search',
+      prompt: '我想围绕工业缺陷检测中的多模态大模型做深度搜索，请先追问需求边界，再总结代表论文。',
+      createdAt: now - 1000 * 60 * 60 * 76,
+    },
+    {
+      id: 'seed-tech-recommendation',
+      modeId: 'tech-recommendation',
+      prompt: '我们想搭建企业内部科研成果知识库问答系统，请先追问需求，再推荐技术方案。',
+      createdAt: now - 1000 * 60 * 60 * 96,
     },
   ];
 

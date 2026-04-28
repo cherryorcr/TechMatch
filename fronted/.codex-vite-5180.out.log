@@ -33,3 +33,6 @@
 [2m00:43:11[22m [36m[1m[vite][22m[39m [32mvite.config.ts changed, restarting server...[39m
 [2m00:43:11[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m Re-optimizing dependencies because lockfile has changed
 [2m00:43:11[22m [36m[1m[vite][22m[39m server restarted.
+[2m00:46:52[22m [36m[1m[vite][22m[39m [32mvite.config.ts changed, restarting server...[39m
+[2m00:46:52[22m [36m[1m[vite][22m[39m server restarted.
+[2m10:15:41[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/home/ModeSwitcher.tsx[22m

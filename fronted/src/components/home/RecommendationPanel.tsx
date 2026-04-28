@@ -5,8 +5,36 @@ interface RecommendationPanelProps {
   panel: ContextualRecommendationState;
 }
 
+function getPanelLabels(modeLabel: string) {
+  if (modeLabel.includes('深度搜索')) {
+    return {
+      empty: '再补充 1 轮信息后，这里会开始出现更贴近当前需求的代表论文与总结线索。',
+      institution: '推荐检索入口',
+      paper: '代表论文',
+      scholar: '相关研究线索',
+    };
+  }
+
+  if (modeLabel.includes('技术推荐')) {
+    return {
+      empty: '再补充 1 轮信息后，这里会开始出现更贴近当前需求的技术方案建议。',
+      institution: '推荐实施路径',
+      paper: '推荐方案',
+      scholar: '方案顾问画像',
+    };
+  }
+
+  return {
+    empty: '再补充 1 轮信息后，这里会开始出现更贴近当前对话的文献与成果推荐。',
+    institution: '推荐高校 / 科研机构',
+    paper: '推荐论文',
+    scholar: '推荐学者',
+  };
+}
+
 export function RecommendationPanel({ modeLabel, panel }: RecommendationPanelProps) {
   const { nextQuestions, recommendations, signals, stage, summary } = panel;
+  const labels = getPanelLabels(modeLabel);
 
   return (
     <aside className="recommendation-column">
@@ -47,7 +75,7 @@ export function RecommendationPanel({ modeLabel, panel }: RecommendationPanelPro
 
         {recommendations.papers.length > 0 ? (
           <div className="recommendation-section">
-            <h4>推荐论文</h4>
+            <h4>{labels.paper}</h4>
             <div className="recommendation-list">
               {recommendations.papers.map((item) => (
                 <article key={item.id} className="recommendation-item">
@@ -60,13 +88,13 @@ export function RecommendationPanel({ modeLabel, panel }: RecommendationPanelPro
           </div>
         ) : (
           <div className="recommendation-empty">
-            再补充 1 轮信息后，这里会开始出现更贴近当前对话的文献与成果推荐。
+            {labels.empty}
           </div>
         )}
 
         {recommendations.scholars.length > 0 ? (
           <div className="recommendation-section">
-            <h4>推荐学者</h4>
+            <h4>{labels.scholar}</h4>
             <div className="recommendation-list">
               {recommendations.scholars.map((item) => (
                 <article key={item.id} className="recommendation-item">
@@ -81,7 +109,7 @@ export function RecommendationPanel({ modeLabel, panel }: RecommendationPanelPro
 
         {recommendations.institutions.length > 0 ? (
           <div className="recommendation-section">
-            <h4>推荐高校 / 科研机构</h4>
+            <h4>{labels.institution}</h4>
             <div className="recommendation-list">
               {recommendations.institutions.map((item) => (
                 <article key={item.id} className="recommendation-item">

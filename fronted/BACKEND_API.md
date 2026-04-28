@@ -16,7 +16,12 @@
 ### 2.1 `HomeModeId`
 
 ```ts
-type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
+type HomeModeId =
+  | 'internal-industry'
+  | 'external-expert'
+  | 'academic'
+  | 'deep-search'
+  | 'tech-recommendation';
 ```
 
 含义：
@@ -24,6 +29,8 @@ type HomeModeId = 'internal-industry' | 'external-expert' | 'academic';
 - `internal-industry`：内部产业用户模式
 - `external-expert`：外部专家用户模式
 - `academic`：高校科研机构模式
+- `deep-search`：Mode 3 深度搜索，流程为“需求 -> 论文总结”
+- `tech-recommendation`：Mode 4 技术推荐，流程为“需求追问 -> 技术方案”
 
 ### 2.2 `MatchOptions`
 

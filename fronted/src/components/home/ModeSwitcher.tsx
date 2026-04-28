@@ -6,6 +6,10 @@ interface ModeSwitcherProps {
   onChange: (mode: HomeModeId) => void;
 }
 
+function getModeSwitchLabel(label: string) {
+  return label.replace(/^Mode\s+\d+\s+/, '');
+}
+
 export function ModeSwitcher({ modes, activeMode, onChange }: ModeSwitcherProps) {
   return (
     <section className="mode-switcher">
@@ -26,7 +30,7 @@ export function ModeSwitcher({ modes, activeMode, onChange }: ModeSwitcherProps)
               onClick={() => onChange(mode.id)}
               type="button"
             >
-              {mode.label}
+              {getModeSwitchLabel(mode.label)}
             </button>
           );
         })}
