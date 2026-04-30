@@ -14,6 +14,48 @@ export interface ResearchHighlight {
 
 export const researchHighlights: ResearchHighlight[] = [
   {
+    id: 'sinolight-ternary-precursor-equipment',
+    title: '锂离子电池三元前驱体生产成套装备系统工程化技术',
+    organization: '中轻科技',
+    source: '中轻科技技术成果资料',
+    type: '科技成果',
+    domain: '新能源电池',
+    tags: ['三元前驱体', '大型反应釜', '工程总承包'],
+    summary: '集成双管并流反应控制、大型反应釜和厂房环境成套控制，支撑三元前驱体产线连续化与智能化。',
+    detail:
+      '技术面向超高镍、NCM811、NCA 等高镍三元前驱体万吨级产线及中低镍产线柔性生产，解决传统间歇法工艺控制难、批次产品不稳定和生产效率低等问题。三元前驱体产品可达到 GB/T 26300-2020 要求，振实密度 1.60-2.50g/cm³，比表面积 3-25m³/g，D50 4.0-14.0μm，吨产品电耗≤2000kWh。',
+    application: '适合锂电新材料企业建设、扩建高镍三元前驱体产线，或采购大型反应釜装备、配料反应系统集成与工程总承包服务。',
+    maturity: '专利号 ZL201911296074.3；中国海诚 王治安 15974160492',
+  },
+  {
+    id: 'sinolight-nickel-cobalt-crystallization',
+    title: '电池级硫酸镍、硫酸钴连续结晶产业化技术',
+    organization: '中轻科技',
+    source: '中轻科技技术成果资料',
+    type: '科技成果',
+    domain: '新能源电池',
+    tags: ['连续结晶', 'MVR蒸发', '电池级硫酸盐'],
+    summary: '采用 MVR 强制循环蒸发浓缩和改进 DTB 式结晶器，形成镍钴硫酸盐连续结晶成套装备。',
+    detail:
+      '技术结合硫酸镍、硫酸钴物料特性，实现蒸发和连续冷却结晶一体化。每吨产品蒸汽耗量≤0.35t，电耗降低 30%，运行成本节省 25%；产品 D50 可稳定在 1.2-1.8mm，主含量≥22.2%，磁性异物≤3ppb，单线产能提升 40%，占地节省 35%。',
+    application: '适合锂电新材料企业建设电池级硫酸镍、硫酸钴原料产线，或开展正极材料提取相关咨询、设计、总承包和成套装备导入。',
+    maturity: '专利号 ZL201510637001.1；中国海诚 朱利民 15802603326',
+  },
+  {
+    id: 'sinolight-lithium-battery-recycling',
+    title: '动力锂电池资源回收综合利用技术',
+    organization: '中轻科技',
+    source: '中轻科技技术成果资料',
+    type: '科技成果',
+    domain: '动力电池回收',
+    tags: ['碳化提锂', '镍钴锰回收', '高盐废水处理'],
+    summary: '围绕黑粉还原焙烧、碳化提锂、萃取反洗和污水处理工艺包，回收碳酸锂及镍钴锰材料。',
+    detail:
+      '技术通过黑粉还原焙烧、碳化提锂、过滤、除杂、蒸发浓缩、沉淀和水洗等工艺回收电池级碳酸锂，纯度≥99.5%；同时通过萃取和反洗实现镍钴锰金属材料回收，硫酸锰纯度≥99.8%、锰回收率≥95.7%，硫酸钴纯度≥97.5%、钴回收率≥92.1%，硫酸镍纯度≥98.2%、镍回收率≥95.8%。',
+    application: '适合动力电池回收企业新建、扩建、技术改造项目，覆盖工艺咨询、工程设计、总承包和资源化利用方案评估。',
+    maturity: '专利号 ZL202322920733.4、ZL202422347117.9；中国海诚 赵常红 13798176650',
+  },
+  {
     id: 'qdu-bone-scaffold',
     title: '定向多功能骨修复支架',
     organization: '青岛大学',
@@ -296,12 +338,17 @@ export const researchHighlights: ResearchHighlight[] = [
 ];
 
 export function getFeaturedResearchHighlights(limit = 8) {
-  const pool = [...researchHighlights];
+  const pinned = [
+    ...researchHighlights.filter((highlight) => highlight.organization === '中轻科技'),
+    ...researchHighlights.filter((highlight) => highlight.organization === '中科曙光').slice(0, 1),
+  ].slice(0, limit);
+  const pinnedIds = new Set(pinned.map((highlight) => highlight.id));
+  const pool = researchHighlights.filter((highlight) => !pinnedIds.has(highlight.id));
 
   for (let index = pool.length - 1; index > 0; index -= 1) {
     const swapIndex = Math.floor(Math.random() * (index + 1));
     [pool[index], pool[swapIndex]] = [pool[swapIndex], pool[index]];
   }
 
-  return pool.slice(0, limit);
+  return [...pinned, ...pool].slice(0, limit);
 }
