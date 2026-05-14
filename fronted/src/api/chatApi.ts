@@ -43,7 +43,7 @@ interface ApiErrorPayload {
 }
 
 interface ProcessRequestPayload {
-  match_content: MatchContent;
+  retrieval_type: MatchContent;
   mode: number;
   session_id: string;
   message: string;
@@ -234,7 +234,7 @@ function buildProcessPayload(params: {
   const options = normalizeMatchOptions(params.options);
 
   return {
-    match_content: options.matchContent,
+    retrieval_type: options.matchContent,
     mode: processModeMap[params.modeId],
     session_id: params.sessionId,
     message: params.message,

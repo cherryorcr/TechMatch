@@ -21,7 +21,7 @@
   "session_id": "process-mode-3-xxx",
   "message": "用户本轮输入",
   "requirement": "首轮需求",
-  "match_content": "学者",
+  "retrieval_type": "学者",
   "subject": "engineer",
   "top-k": 10,
   "cot": false,
@@ -72,7 +72,7 @@ type HomeModeId =
 
 字段说明：
 
-- `matchContent`: `"学者" | "论文" | "专利" | "基金"`，匹配内容；前端调用 `/process` 时会同步映射为顶层 `match_content` 字段
+- `matchContent`: `"学者" | "论文" | "专利" | "基金"`，匹配内容；前端调用 `/process` 时会同步映射为顶层 `retrieval_type` 字段
 - `paperCount`: number，匹配论文数量
 - `showReasoning`: boolean，是否展示思考过程
 
