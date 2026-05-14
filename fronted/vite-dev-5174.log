@@ -1,0 +1,11 @@
+
+> techmatch@0.1.0 dev
+> vite --force --host 127.0.0.1 --port 5174 --strictPort
+
+[2m12:07:12[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m Forced re-optimization of dependencies
+
+  [32m[1mVITE[22m v7.3.2[39m  [2mready in [0m[1m907[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m5174[22m/[39m
+[2m12:09:15[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/home/ModeSwitcher.tsx[22m
+[2m12:10:16[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/home/ModeSwitcher.tsx[22m
