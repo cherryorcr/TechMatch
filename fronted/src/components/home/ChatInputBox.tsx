@@ -1,5 +1,6 @@
 import { FormEvent } from 'react';
-import { paperCountOptions } from '../../mock/home';
+import { matchContentOptions, paperCountOptions } from '../../mock/home';
+import type { MatchContent } from '../../types/chat';
 import { AttachmentPicker } from '../files/AttachmentPicker';
 
 interface ChatInputBoxProps {
@@ -9,10 +10,12 @@ interface ChatInputBoxProps {
   placeholder: string;
   inputHint: string;
   isUploadingFiles?: boolean;
+  matchContent: MatchContent;
   paperCount: number;
   showReasoning: boolean;
   onChange: (value: string) => void;
   onAddFiles: (files: File[]) => void;
+  onMatchContentChange: (value: MatchContent) => void;
   onRemoveFile: (index: number) => void;
   onPaperCountChange: (value: number) => void;
   onShowReasoningChange: (value: boolean) => void;
@@ -26,10 +29,12 @@ export function ChatInputBox({
   placeholder,
   inputHint,
   isUploadingFiles = false,
+  matchContent,
   paperCount,
   showReasoning,
   onChange,
   onAddFiles,
+  onMatchContentChange,
   onRemoveFile,
   onPaperCountChange,
   onShowReasoningChange,
@@ -111,6 +116,22 @@ export function ChatInputBox({
                 +
               </button>
             </div>
+          </label>
+
+          <label className="home-option-field home-option-content">
+            <span>匹配内容</span>
+            <select
+              className="match-content-select"
+              disabled={disabled || isUploadingFiles}
+              value={matchContent}
+              onChange={(event) => onMatchContentChange(event.target.value as MatchContent)}
+            >
+              {matchContentOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </label>
 
           <label className="home-option-toggle">

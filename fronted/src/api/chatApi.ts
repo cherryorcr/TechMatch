@@ -1,7 +1,9 @@
 import {
   buildContextualRecommendations,
   createSessionTitle,
+  defaultMatchOptions,
   homeModes,
+  matchContentOptions,
 } from '../mock/home';
 import type {
   AppendMessagePayload,
@@ -10,6 +12,7 @@ import type {
   ChatSessionSummary,
   CreateSessionPayload,
   HomeModeId,
+  MatchContent,
   MatchOptions,
   SessionDetailResponse,
   SessionListResponse,
@@ -40,6 +43,7 @@ interface ApiErrorPayload {
 }
 
 interface ProcessRequestPayload {
+  match_content: MatchContent;
   mode: number;
   session_id: string;
   message: string;
@@ -128,6 +132,33 @@ function createId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function isMatchContent(value: unknown): value is MatchContent {
+  return matchContentOptions.some((option) => option.value === value);
+}
+
+function normalizeMatchOptions(options?: Partial<MatchOptions>): MatchOptions {
+  return {
+    matchContent: isMatchContent(options?.matchContent)
+      ? options.matchContent
+      : defaultMatchOptions.matchContent,
+    paperCount:
+      typeof options?.paperCount === 'number' && Number.isFinite(options.paperCount)
+        ? options.paperCount
+        : defaultMatchOptions.paperCount,
+    showReasoning:
+      typeof options?.showReasoning === 'boolean'
+        ? options.showReasoning
+        : defaultMatchOptions.showReasoning,
+  };
+}
+
+function normalizeSession(session: ChatSession): ChatSession {
+  return {
+    ...session,
+    options: normalizeMatchOptions(session.options),
+  };
+}
+
 function readStoredSessions() {
   if (typeof window === 'undefined') {
     return [] as ChatSession[];
@@ -141,7 +172,7 @@ function readStoredSessions() {
     }
 
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as ChatSession[]) : [];
+    return Array.isArray(parsed) ? (parsed as ChatSession[]).map(normalizeSession) : [];
   } catch {
     return [] as ChatSession[];
   }
@@ -200,14 +231,17 @@ function buildProcessPayload(params: {
   requirement: string;
   sessionId: string;
 }): ProcessRequestPayload {
+  const options = normalizeMatchOptions(params.options);
+
   return {
+    match_content: options.matchContent,
     mode: processModeMap[params.modeId],
     session_id: params.sessionId,
     message: params.message,
     requirement: params.requirement,
     subject: DEFAULT_SUBJECT,
-    'top-k': params.options.paperCount,
-    cot: params.options.showReasoning,
+    'top-k': options.paperCount,
+    cot: options.showReasoning,
     if_topk: true,
   };
 }
@@ -448,6 +482,7 @@ export const chatApi = {
     } satisfies SessionDetailResponse;
   },
   async createSession(payload: CreateSessionPayload) {
+    const options = normalizeMatchOptions(payload.options);
     const sessionId = createId(`process-mode-${processModeMap[payload.modeId]}`);
     const now = Date.now();
     const modeLabel = homeModes[payload.modeId].label;
@@ -462,18 +497,18 @@ export const chatApi = {
       buildProcessPayload({
         message: payload.prompt,
         modeId: payload.modeId,
-        options: payload.options,
+        options,
         requirement: payload.prompt,
         sessionId,
       }),
     );
-    const assistantMessage = createAssistantMessage(response, payload.options.showReasoning);
+    const assistantMessage = createAssistantMessage(response, options.showReasoning);
     const session: ChatSession = {
       id: sessionId,
       title: createSessionTitle(payload.prompt),
       modeId: payload.modeId,
       modeLabel,
-      options: payload.options,
+      options,
       messages: [userMessage, assistantMessage],
       createdAt: now,
       updatedAt: now,

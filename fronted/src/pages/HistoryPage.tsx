@@ -22,6 +22,7 @@ export function HistoryPage() {
         modeLabel: session.modeLabel,
         updatedAt: formatTime(session.updatedAt),
         latestMessage: session.latestMessage || '暂无对话内容',
+        matchContent: session.options.matchContent,
         paperCount: session.options.paperCount,
         showReasoning: session.options.showReasoning,
       })),
@@ -56,6 +57,7 @@ export function HistoryPage() {
               <small>{session.modeLabel}</small>
               <p>{session.latestMessage}</p>
               <div className="history-record-meta">
+                <span>{session.matchContent}</span>
                 <span>Top {session.paperCount}</span>
                 <span>{session.showReasoning ? '展示思考过程' : '隐藏思考过程'}</span>
               </div>

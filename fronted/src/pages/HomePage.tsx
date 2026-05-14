@@ -14,6 +14,7 @@ import {
   homeModeList,
   homeModes,
   type HomeModeId,
+  type MatchContent,
 } from '../mock/home';
 
 export function HomePage() {
@@ -24,6 +25,7 @@ export function HomePage() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [fileError, setFileError] = useState<string | null>(null);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+  const [matchContent, setMatchContent] = useState<MatchContent>(defaultMatchOptions.matchContent);
   const [paperCount, setPaperCount] = useState(defaultMatchOptions.paperCount);
   const [showReasoning, setShowReasoning] = useState(defaultMatchOptions.showReasoning);
 
@@ -77,6 +79,7 @@ export function HomePage() {
         fileIds: uploadedFiles.map((file) => file.id),
         modeId: activeMode,
         options: {
+          matchContent,
           paperCount,
           showReasoning,
         },
@@ -148,6 +151,7 @@ export function HomePage() {
 
               <div className="home-command-badges">
                 <span className="home-command-pill">Multi-turn</span>
+                <span className="home-command-pill">{matchContent}</span>
                 <span className="home-command-pill">Top {paperCount}</span>
               </div>
             </div>
@@ -159,12 +163,14 @@ export function HomePage() {
               files={selectedFiles}
               inputHint={currentMode.inputHint}
               isUploadingFiles={isUploadingFiles}
+              matchContent={matchContent}
               paperCount={paperCount}
               placeholder={currentMode.placeholder}
               showReasoning={showReasoning}
               value={draft}
               onAddFiles={handleAddFiles}
               onChange={setDraft}
+              onMatchContentChange={setMatchContent}
               onPaperCountChange={handlePaperCountChange}
               onRemoveFile={handleRemoveFile}
               onShowReasoningChange={setShowReasoning}

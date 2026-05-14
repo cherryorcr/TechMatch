@@ -171,6 +171,7 @@ export function ChatPage() {
               <h1>{session.title}</h1>
               <p>
                 当前模式：{session.modeLabel} · 匹配论文数：Top {session.options.paperCount} ·
+                匹配内容：{session.options.matchContent} ·
                 {session.options.showReasoning ? ' 显示思考过程' : ' 不显示思考过程'} ·
                 已补充 {Math.max(userTurnCount - 1, 0)} 轮信息
               </p>

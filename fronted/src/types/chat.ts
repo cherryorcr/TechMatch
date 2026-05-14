@@ -5,7 +5,10 @@ export type HomeModeId =
   | 'deep-search'
   | 'tech-recommendation';
 
+export type MatchContent = '学者' | '论文' | '专利' | '基金';
+
 export interface MatchOptions {
+  matchContent: MatchContent;
   paperCount: number;
   showReasoning: boolean;
 }

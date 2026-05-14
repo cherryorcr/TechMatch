@@ -4,6 +4,7 @@ import type {
   ContextualRecommendationState,
   HomeModeConfig,
   HomeModeId,
+  MatchContent,
   MatchOptions,
   RecommendationBundle,
   RecommendationItem,
@@ -17,6 +18,7 @@ export type {
   ContextualRecommendationState,
   HomeModeConfig,
   HomeModeId,
+  MatchContent,
   MatchOptions,
   RecommendationBundle,
   RecommendationItem,
@@ -26,9 +28,16 @@ export type {
 
 export const defaultHomeMode: HomeModeId = 'internal-industry';
 export const defaultMatchOptions: MatchOptions = {
+  matchContent: '学者',
   paperCount: 5,
   showReasoning: false,
 };
+export const matchContentOptions = [
+  { label: '学者', value: '学者' },
+  { label: '论文', value: '论文' },
+  { label: '专利', value: '专利' },
+  { label: '基金', value: '基金' },
+] as const satisfies ReadonlyArray<{ label: string; value: MatchContent }>;
 export const paperCountOptions = [5, 10, 20, 30];
 
 type SignalGroup = {
@@ -1088,6 +1097,7 @@ export function createSeedSessions(): ChatSession[] {
 
   return templates.map((template, index) => {
     const options: MatchOptions = {
+      matchContent: matchContentOptions[index % matchContentOptions.length].value,
       paperCount: paperCountOptions[index] ?? defaultMatchOptions.paperCount,
       showReasoning: index !== 1,
     };

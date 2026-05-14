@@ -1997,6 +1997,11 @@ html[data-theme='light'] .app-backdrop-glow-right {
   min-width: 260px;
 }
 
+.home-option-content {
+  justify-content: space-between;
+  min-width: 240px;
+}
+
 .count-stepper {
   display: inline-flex;
   align-items: center;
@@ -2037,6 +2042,17 @@ html[data-theme='light'] .app-backdrop-glow-right {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.match-content-select {
+  min-width: 112px;
+  min-height: 34px;
+  padding: 0 2rem 0 0.82rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.72rem;
+  background: rgba(120, 168, 255, 0.14);
+  color: var(--accent-strong);
+  font-weight: 700;
 }
 
 .paper-preset {
@@ -2987,6 +3003,11 @@ html[data-theme='light'] .app-backdrop-glow-right {
 
   .home-option-presets {
     width: 100%;
+  }
+
+  .match-content-select {
+    width: 100%;
+    min-width: 0;
   }
 
   .mode-pill-row {
