@@ -56,7 +56,7 @@ export function ChatPage() {
     setMissingSession(false);
     setPageError(null);
 
-    if (!sessionId || (session && recommendationPanel)) {
+    if (!sessionId || session) {
       return () => {
         isActive = false;
       };
@@ -80,7 +80,7 @@ export function ChatPage() {
     return () => {
       isActive = false;
     };
-  }, [loadSession, recommendationPanel, session, sessionId]);
+  }, [loadSession, session, sessionId]);
 
   async function handleSubmit(nextPrompt?: string) {
     const prompt = (nextPrompt ?? draft).trim();

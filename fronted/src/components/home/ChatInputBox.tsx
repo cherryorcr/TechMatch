@@ -53,8 +53,8 @@ export function ChatInputBox({
       <div className="input-frame">
         <div className="input-frame-head">
           <div className="input-frame-copy">
-            <span className="eyebrow">Workspace Input</span>
-            <strong>描述需求、成果或机构目标</strong>
+            <span className="eyebrow">New Chat</span>
+            <strong>输入需求，开始匹配</strong>
           </div>
 
           <span className="input-frame-status">

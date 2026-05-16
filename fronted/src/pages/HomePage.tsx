@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { chatApi } from '../api/chatApi';
-import { ChatHero } from '../components/home/ChatHero';
 import { ChatInputBox } from '../components/home/ChatInputBox';
 import { ModeSwitcher } from '../components/home/ModeSwitcher';
 import { PromptSuggestions } from '../components/home/PromptSuggestions';
@@ -104,11 +103,11 @@ export function HomePage() {
         <section className="panel home-stage-panel">
           <div className="home-stage-grid">
             <div className="home-stage-copy">
-              <ChatHero
-                modeLabel={currentMode.label}
-                subtitle={currentMode.subtitle}
-                title={currentMode.title}
-              />
+              <div className="home-greeting">
+                <span className="eyebrow">TechMatch AI</span>
+                <h1>你好，我是 TechMatch</h1>
+                <p>描述你的技术需求、论文方向或合作目标，我会用对话方式帮你筛选匹配资源。</p>
+              </div>
 
               <div className="hero-signal-strip">
                 {currentMode.previewSections.map((section) => (

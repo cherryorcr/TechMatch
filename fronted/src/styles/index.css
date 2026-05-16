@@ -948,6 +948,15 @@ html[data-theme='light'] .auth-preview-note {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 246, 255, 0.92));
 }
 
+html[data-theme='light'] .match-content-select {
+  color-scheme: light;
+}
+
+html[data-theme='light'] .match-content-select option {
+  background: #ffffff;
+  color: #152033;
+}
+
 html[data-theme='light'] .auth-divider span {
   background: rgba(248, 251, 255, 0.98);
 }
@@ -1054,7 +1063,7 @@ html[data-theme='light'] .app-backdrop-glow-right {
 }
 
 .page-grid-home-single {
-  max-width: 1120px;
+  max-width: min(1080px, 100%);
   margin: 0 auto;
 }
 
@@ -1068,29 +1077,51 @@ html[data-theme='light'] .app-backdrop-glow-right {
 
 .home-stage-panel {
   display: grid;
-  gap: 1.35rem;
-  min-height: 68vh;
-  padding: 2.1rem 2.15rem 2rem;
-  background:
-    radial-gradient(circle at 82% 16%, rgba(242, 138, 109, 0.12), transparent 18%),
-    radial-gradient(circle at 12% 8%, rgba(120, 168, 255, 0.12), transparent 22%),
-    linear-gradient(180deg, rgba(11, 17, 31, 0.96), rgba(7, 12, 23, 0.9)),
-    var(--panel);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 30px 90px rgba(2, 6, 18, 0.18);
-  overflow: hidden;
+  gap: clamp(1rem, 2vw, 1.4rem);
+  min-height: auto;
+  padding: clamp(1.4rem, 4vw, 3rem) 0 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  overflow: visible;
 }
 
 .home-stage-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
-  gap: 1rem;
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  align-items: center;
+  justify-items: center;
 }
 
 .home-stage-copy {
   display: grid;
-  gap: 1rem;
+  gap: 0;
+  width: min(900px, 100%);
+  text-align: center;
+}
+
+.home-greeting {
+  display: grid;
+  gap: 0.72rem;
+  justify-items: center;
+  width: min(780px, 100%);
+  margin: 0 auto;
+}
+
+.home-greeting h1 {
+  margin: 0;
+  font-size: clamp(2.05rem, 4vw, 3.4rem);
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+.home-greeting p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1.72;
 }
 
 .home-hero {
@@ -1174,7 +1205,7 @@ html[data-theme='light'] .app-backdrop-glow-right {
 }
 
 .hero-signal-strip {
-  display: grid;
+  display: none;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
 }
@@ -1207,7 +1238,7 @@ html[data-theme='light'] .app-backdrop-glow-right {
 }
 
 .hero-side-card {
-  display: grid;
+  display: none;
   gap: 0.9rem;
   padding: 1.15rem 1.1rem;
   background:
@@ -1270,17 +1301,17 @@ html[data-theme='light'] .app-backdrop-glow-right {
 .home-command-shell {
   display: grid;
   gap: 1rem;
-  padding: 1.1rem;
-  background:
-    radial-gradient(circle at top right, rgba(120, 168, 255, 0.1), transparent 26%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
-    rgba(8, 13, 24, 0.48);
-  backdrop-filter: blur(22px);
-  box-shadow: 0 26px 72px rgba(2, 6, 18, 0.18);
+  width: min(900px, 100%);
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
 }
 
 .home-command-header {
-  display: flex;
+  display: none;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
@@ -1301,6 +1332,12 @@ html[data-theme='light'] .app-backdrop-glow-right {
 
 .chat-input-box {
   gap: 0;
+}
+
+.home-stage-panel .mode-switcher,
+.home-stage-panel .prompt-suggestions {
+  width: min(900px, 100%);
+  margin: 0 auto;
 }
 
 .home-command-badges {
@@ -1743,12 +1780,16 @@ html[data-theme='light'] .app-backdrop-glow-right {
 .recent-sessions-strip {
   display: grid;
   gap: 0.85rem;
+  min-width: 0;
+  width: 100%;
 }
 
 .input-frame {
   display: grid;
   gap: 1rem;
   position: relative;
+  width: 100%;
+  min-width: 0;
   overflow: hidden;
   padding: 1.25rem 1.3rem;
   border: 1px solid var(--border-strong);
@@ -1809,12 +1850,14 @@ html[data-theme='light'] .app-backdrop-glow-right {
   z-index: 1;
   width: 100%;
   min-height: 180px;
+  max-height: min(46vh, 420px);
   padding: 0;
   border: 0;
   background: transparent;
   color: var(--text-main);
   font-size: 1.08rem;
   line-height: 1.82;
+  resize: vertical;
 }
 
 .input-frame textarea::placeholder,
@@ -2081,7 +2124,13 @@ html[data-theme='light'] .app-backdrop-glow-right {
   border-radius: 0.72rem;
   background: rgba(120, 168, 255, 0.14);
   color: var(--accent-strong);
+  color-scheme: dark;
   font-weight: 700;
+}
+
+.match-content-select option {
+  background: #0b1120;
+  color: #f5f7ff;
 }
 
 .paper-preset {
@@ -2179,9 +2228,7 @@ html[data-theme='light'] .app-backdrop-glow-right {
 }
 
 .recommendation-column {
-  position: sticky;
-  top: 1.5rem;
-  align-self: start;
+  display: none;
 }
 
 .recommendation-panel,
@@ -2268,9 +2315,11 @@ html[data-theme='light'] .app-backdrop-glow-right {
 
 .chat-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
-  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
   width: 100%;
+  max-width: min(1180px, 100%);
+  margin: 0 auto;
 }
 
 .chat-main-column {
@@ -2280,8 +2329,8 @@ html[data-theme='light'] .app-backdrop-glow-right {
 }
 
 .chat-page-header {
-  max-width: 920px;
-  margin: 0;
+  max-width: min(1120px, 100%);
+  margin: 0 auto;
   width: 100%;
 }
 
@@ -2296,19 +2345,29 @@ html[data-theme='light'] .app-backdrop-glow-right {
 .chat-thread {
   display: grid;
   gap: 1rem;
-  max-width: 920px;
+  max-width: min(1120px, 100%);
   width: 100%;
-  margin: 0;
+  margin: 0 auto;
   padding: 0.25rem 0.1rem 0.5rem;
   overflow: auto;
 }
 
+.chat-bubble {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .chat-bubble-user {
+  justify-self: end;
+  width: fit-content;
+  max-width: min(760px, 88%);
   border-color: rgba(120, 168, 255, 0.18);
   background: rgba(120, 168, 255, 0.08);
 }
 
 .chat-bubble-assistant {
+  justify-self: stretch;
+  width: 100%;
   border-color: rgba(139, 226, 194, 0.16);
   background: rgba(139, 226, 194, 0.06);
 }
@@ -2506,12 +2565,15 @@ html[data-theme='light'] .app-backdrop-glow-right {
 
 .chat-markdown-table-wrap {
   margin-top: 0.55rem;
+  max-width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .chat-markdown table {
   width: 100%;
-  min-width: 420px;
+  min-width: 960px;
+  table-layout: auto;
   border-collapse: collapse;
   border: 1px solid rgba(149, 169, 211, 0.16);
   border-radius: 0.9rem;
@@ -2524,11 +2586,40 @@ html[data-theme='light'] .app-backdrop-glow-right {
   border-bottom: 1px solid rgba(149, 169, 211, 0.12);
   text-align: left;
   vertical-align: top;
+  min-width: 120px;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: anywhere;
 }
 
 .chat-markdown th {
   background: rgba(120, 168, 255, 0.08);
   color: var(--text-main);
+}
+
+.chat-markdown th:first-child,
+.chat-markdown td:first-child {
+  width: 64px;
+  min-width: 64px;
+  white-space: nowrap;
+}
+
+.chat-markdown th:nth-child(2),
+.chat-markdown td:nth-child(2),
+.chat-markdown .match-score-cell {
+  width: 128px;
+  min-width: 128px;
+  white-space: nowrap;
+}
+
+.chat-markdown th:nth-child(5),
+.chat-markdown td:nth-child(5) {
+  min-width: 280px;
+}
+
+.chat-markdown th:nth-child(6),
+.chat-markdown td:nth-child(6) {
+  min-width: 340px;
 }
 
 .chat-markdown tr:last-child td {
@@ -2551,6 +2642,18 @@ html[data-theme='light'] .app-backdrop-glow-right {
 .match-star-empty {
   color: rgba(149, 169, 211, 0.42);
   font-size: 0.95em;
+}
+
+.match-score-unknown {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0.18rem 0.52rem;
+  border: 1px solid rgba(149, 169, 211, 0.18);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  white-space: nowrap;
 }
 
 .chat-markdown hr {
@@ -2596,9 +2699,9 @@ html[data-theme='light'] .app-backdrop-glow-right {
 .chat-composer {
   position: sticky;
   bottom: 0;
-  max-width: 920px;
-  width: 100%;
-  margin: auto 0 0;
+  max-width: none;
+  width: min(1120px, 100%);
+  margin: auto auto 0;
   padding-top: 0.15rem;
   background: linear-gradient(180deg, rgba(9, 15, 28, 0), rgba(9, 15, 28, 0.9) 28%, rgba(9, 15, 28, 1) 100%);
 }
@@ -2616,20 +2719,23 @@ html[data-theme='light'] .app-backdrop-glow-right {
 .chat-composer-shell textarea {
   width: 100%;
   min-height: 110px;
+  max-height: min(36vh, 320px);
   padding: 0;
   border: 0;
   background: transparent;
   color: var(--text-main);
   font-size: 1rem;
   line-height: 1.8;
+  resize: vertical;
 }
 
 .chat-composer-footer {
   margin-top: 0.9rem;
+  justify-content: flex-end;
 }
 
 .chat-composer-footer span {
-  font-size: 0.9rem;
+  display: none;
 }
 
 .placeholder-hero {

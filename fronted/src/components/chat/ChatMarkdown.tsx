@@ -11,10 +11,16 @@ interface ChatMarkdownProps {
   content: string;
 }
 
+type MatchScoreDisplay = {
+  kind: 'stars' | 'unknown';
+  value: string;
+};
+
 const MAX_MATCH_STARS = 5;
 const MAX_MATCH_SCORE = 10;
 const FILLED_STAR = '\u2b50';
 const EMPTY_STAR = '\u2606';
+const UNKNOWN_MATCH_TEXT = '不确定';
 const MATCH_STARS_TEXT_PATTERN = /^[\u2b50\u2606]{5}$/;
 const MATCH_SCORE_HEADERS = new Set([
   '\u5339\u914d\u5ea6',
@@ -133,6 +139,26 @@ function isMatchScoreHeader(header: string) {
   return MATCH_SCORE_HEADERS.has(normalizedHeader);
 }
 
+function isUnknownMatchScore(rawValue: string) {
+  const normalizedValue = rawValue.trim().replace(/\s+/g, '').toLowerCase();
+
+  return (
+    normalizedValue === '' ||
+    normalizedValue === 'n/a' ||
+    normalizedValue === 'na' ||
+    normalizedValue === 'n.a.' ||
+    normalizedValue === 'null' ||
+    normalizedValue === 'none' ||
+    normalizedValue === 'unknown' ||
+    normalizedValue === '-' ||
+    normalizedValue === '--' ||
+    normalizedValue === '—' ||
+    normalizedValue === UNKNOWN_MATCH_TEXT ||
+    normalizedValue === '未知' ||
+    normalizedValue === '暂无'
+  );
+}
+
 function getMatchStarCount(rawValue: string) {
   const value = rawValue.trim();
   const fractionMatch = value.match(/^(\d+(?:\.\d+)?)\s*\/\s*(5|10)\s*(?:\u661f|\u5206|stars?)?$/i);
@@ -179,6 +205,45 @@ function renderStars(rawValue: string) {
   return FILLED_STAR.repeat(filledStars) + EMPTY_STAR.repeat(MAX_MATCH_STARS - filledStars);
 }
 
+function getMatchScoreDisplay(rawValue: string): MatchScoreDisplay | null {
+  const stars = renderStars(rawValue);
+
+  if (stars) {
+    return { kind: 'stars', value: stars };
+  }
+
+  if (isUnknownMatchScore(rawValue)) {
+    return { kind: 'unknown', value: UNKNOWN_MATCH_TEXT };
+  }
+
+  return null;
+}
+
+function renderMatchStars(value: string) {
+  const filledCount = value.split(FILLED_STAR).length - 1;
+
+  return (
+    <span className="match-stars" aria-label={`${filledCount} / ${MAX_MATCH_STARS}`}>
+      {value.split('').map((star, index) => (
+        <span
+          key={`${star}-${index}`}
+          className={star === FILLED_STAR ? 'match-star-filled' : 'match-star-empty'}
+        >
+          {star}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function renderMatchScoreDisplay(display: MatchScoreDisplay) {
+  if (display.kind === 'stars') {
+    return renderMatchStars(display.value);
+  }
+
+  return <span className="match-score-unknown">{display.value}</span>;
+}
+
 function replaceMatchScoreCells(table: Table) {
   const [headerRow, ...bodyRows] = table.children as TableRow[];
   const matchScoreColumnIndexes = headerRow.children
@@ -197,16 +262,16 @@ function replaceMatchScoreCells(table: Table) {
         return;
       }
 
-      const stars = renderStars(getCellText(cell));
+      const display = getMatchScoreDisplay(getCellText(cell));
 
-      if (!stars) {
+      if (!display) {
         return;
       }
 
       cell.children = [
         {
           type: 'text',
-          value: stars,
+          value: display.value,
         },
       ];
     });
@@ -242,24 +307,16 @@ function MarkdownSegment({ content }: { content: string }) {
           </div>
         ),
         td: ({ children, ...props }: ComponentPropsWithoutRef<'td'>) => {
-          const text = getReactText(children);
+          const text = getReactText(children).trim();
+          const matchDisplay = MATCH_STARS_TEXT_PATTERN.test(text)
+            ? ({ kind: 'stars', value: text } satisfies MatchScoreDisplay)
+            : text === UNKNOWN_MATCH_TEXT
+              ? ({ kind: 'unknown', value: text } satisfies MatchScoreDisplay)
+              : null;
 
           return (
-            <td {...props}>
-              {MATCH_STARS_TEXT_PATTERN.test(text) ? (
-                <span className="match-stars" aria-label={`${text.split(FILLED_STAR).length - 1} / ${MAX_MATCH_STARS}`}>
-                  {text.split('').map((star, index) => (
-                    <span
-                      key={`${star}-${index}`}
-                      className={star === FILLED_STAR ? 'match-star-filled' : 'match-star-empty'}
-                    >
-                      {star}
-                    </span>
-                  ))}
-                </span>
-              ) : (
-                children
-              )}
+            <td {...props} className={matchDisplay ? 'match-score-cell' : props.className}>
+              {matchDisplay ? renderMatchScoreDisplay(matchDisplay) : children}
             </td>
           );
         },
@@ -285,15 +342,27 @@ function HtmlTableSegment({ content }: { content: string }) {
   const rows = Array.from(table.querySelectorAll('tr')).map((row) =>
     Array.from(row.children)
       .filter((cell) => cell.tagName === 'TD' || cell.tagName === 'TH')
-      .map((cell) => ({
-        isHeader: cell.tagName === 'TH',
-        lines: getCellLines(cell),
-      })),
+      .map((cell) => {
+        const lines = getCellLines(cell);
+
+        return {
+          isHeader: cell.tagName === 'TH',
+          lines,
+          text: lines.join(' ').trim(),
+        };
+      }),
   );
 
   if (rows.length === 0) {
     return <MarkdownSegment content={content} />;
   }
+
+  const headerRowIndex = rows.findIndex((row) => row.some((cell) => cell.isHeader));
+  const effectiveHeaderRowIndex = headerRowIndex >= 0 ? headerRowIndex : 0;
+  const headerRow = rows[effectiveHeaderRowIndex] ?? [];
+  const matchScoreColumnIndexes = headerRow
+    .map((cell, index) => (isMatchScoreHeader(cell.text) ? index : -1))
+    .filter((index) => index >= 0);
 
   return (
     <div className="chat-markdown-table-wrap">
@@ -303,10 +372,18 @@ function HtmlTableSegment({ content }: { content: string }) {
             <tr key={`row-${rowIndex}`}>
               {row.map((cell, cellIndex) => {
                 const CellTag = cell.isHeader ? 'th' : 'td';
+                const isMatchScoreCell =
+                  !cell.isHeader &&
+                  rowIndex !== effectiveHeaderRowIndex &&
+                  matchScoreColumnIndexes.includes(cellIndex);
+                const matchDisplay = isMatchScoreCell ? getMatchScoreDisplay(cell.text) : null;
 
                 return (
-                  <CellTag key={`cell-${rowIndex}-${cellIndex}`}>
-                    {renderCellContent(cell.lines)}
+                  <CellTag
+                    key={`cell-${rowIndex}-${cellIndex}`}
+                    className={isMatchScoreCell ? 'match-score-cell' : undefined}
+                  >
+                    {matchDisplay ? renderMatchScoreDisplay(matchDisplay) : renderCellContent(cell.lines)}
                   </CellTag>
                 );
               })}
