@@ -27,7 +27,9 @@ const MATCH_SCORE_HEADERS = new Set([
   'compatibility',
   'compatibilityscore',
 ]);
-const EXTRA_SAFE_HTML_TAGS = ['mark', 'small', 'u'];
+const EXTRA_SAFE_HTML_TAGS = ['caption', 'col', 'colgroup', 'mark', 'small', 'u'];
+const ESCAPED_HTML_PATTERN =
+  /&lt;\/?(?:a|blockquote|br|caption|code|col|colgroup|details|div|em|h[1-6]|img|li|mark|ol|p|pre|section|small|span|strong|summary|table|tbody|td|tfoot|th|thead|tr|ul)\b/i;
 
 const chatHtmlSchema: RehypeSanitizeOptions = {
   ...defaultSchema,
@@ -38,6 +40,21 @@ const chatHtmlSchema: RehypeSanitizeOptions = {
   },
   tagNames: [...(defaultSchema.tagNames ?? []), ...EXTRA_SAFE_HTML_TAGS],
 };
+
+function decodeEscapedHtml(value: string) {
+  return value
+    .replace(/&amp;(lt|gt|quot|apos|#39|#x27|nbsp);/gi, '&$1;')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&apos;|&#39;|&#x27;/gi, "'")
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&');
+}
+
+function normalizeRenderableContent(value: string) {
+  return ESCAPED_HTML_PATTERN.test(value) ? decodeEscapedHtml(value) : value;
+}
 
 function getCellText(cell: TableCell) {
   return cell.children
@@ -157,6 +174,8 @@ function remarkMatchScoreStars() {
 }
 
 export function ChatMarkdown({ className, content }: ChatMarkdownProps) {
+  const renderableContent = normalizeRenderableContent(content);
+
   return (
     <div className={className}>
       <ReactMarkdown
@@ -199,7 +218,7 @@ export function ChatMarkdown({ className, content }: ChatMarkdownProps) {
           },
         }}
       >
-        {content}
+        {renderableContent}
       </ReactMarkdown>
     </div>
   );

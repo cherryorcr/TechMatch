@@ -3,3 +3,5 @@ fronted/vite-dev.log
 fronted/vite-dev.err
 fronted/.vite/
 .DS_Store
+*.pdf
+*.PDF

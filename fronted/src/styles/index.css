@@ -1387,6 +1387,35 @@ html[data-theme='light'] .app-backdrop-glow-right {
   line-height: 1.72;
 }
 
+.academic-section-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.85rem;
+  max-width: min(680px, 100%);
+}
+
+.recommendation-refresh-button {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0.58rem 0.82rem;
+  border: 1px solid rgba(139, 226, 194, 0.24);
+  border-radius: 0.8rem;
+  background: rgba(139, 226, 194, 0.09);
+  color: var(--accent-strong);
+  font-weight: 800;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.recommendation-refresh-button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(139, 226, 194, 0.38);
+  background: rgba(139, 226, 194, 0.14);
+}
+
 .academic-card-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2978,9 +3007,14 @@ html[data-theme='light'] .app-backdrop-glow-right {
 
   .home-command-header,
   .academic-section-head,
+  .academic-section-actions,
   .input-frame-head {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .academic-section-actions {
+    width: 100%;
   }
 
   .app-backdrop-image {
@@ -3032,6 +3066,7 @@ html[data-theme='light'] .app-backdrop-glow-right {
 
   .home-option-field,
   .home-option-toggle,
+  .recommendation-refresh-button,
   .submit-button,
   .download-button,
   .attachment-trigger,

@@ -29,6 +29,28 @@ const PROCESS_API_BASE_URLS =
     : [configuredProcessApiBaseUrl];
 const SESSION_STORAGE_KEY = 'techmatch.process.sessions.v1';
 const DEFAULT_SUBJECT = 'engineer';
+const PROCESS_OUTPUT_DATA_FIELDS = [
+  'final_output',
+  'finalOutput',
+  'html_output',
+  'htmlOutput',
+  'html',
+  'table_html',
+  'html_table',
+  'content',
+  'answer',
+  'result',
+  'output',
+] as const;
+const PROCESS_OUTPUT_TOP_LEVEL_FIELDS = [
+  'message',
+  'content',
+  'answer',
+  'result',
+  'output',
+  'html',
+  'html_output',
+] as const;
 
 const processModeMap: Record<HomeModeId, number> = {
   'internal-industry': 0,
@@ -250,15 +272,39 @@ function getProcessStage(response: ProcessResponse) {
   return response.data?.stage || response.stage || '';
 }
 
-function getProcessOutput(response: ProcessResponse) {
-  const finalOutput = response.data?.final_output;
-
-  if (typeof finalOutput === 'string' && finalOutput.trim()) {
-    return finalOutput;
+function getFirstStringField(
+  source: Record<string, unknown> | null | undefined,
+  fields: readonly string[],
+) {
+  if (!source) {
+    return undefined;
   }
 
-  if (typeof response.message === 'string' && response.message.trim()) {
-    return response.message;
+  for (const field of fields) {
+    const value = source[field];
+
+    if (typeof value === 'string' && value.trim()) {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
+function getProcessOutput(response: ProcessResponse) {
+  const dataOutput = getFirstStringField(response.data, PROCESS_OUTPUT_DATA_FIELDS);
+
+  if (dataOutput) {
+    return dataOutput;
+  }
+
+  const topLevelOutput = getFirstStringField(
+    response as unknown as Record<string, unknown>,
+    PROCESS_OUTPUT_TOP_LEVEL_FIELDS,
+  );
+
+  if (topLevelOutput) {
+    return topLevelOutput;
   }
 
   return '后端已处理完成，但没有返回可展示内容。';

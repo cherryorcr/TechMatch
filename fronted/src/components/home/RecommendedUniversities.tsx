@@ -1,12 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   getFeaturedResearchHighlights,
+  researchHighlights,
   type ResearchHighlight,
 } from '../../mock/researchHighlights';
 
 export function RecommendedUniversities() {
-  const recommendedHighlights = useMemo(() => getFeaturedResearchHighlights(8), []);
+  const [recommendedHighlights, setRecommendedHighlights] = useState<ResearchHighlight[]>(() =>
+    getFeaturedResearchHighlights(8),
+  );
   const [selectedHighlight, setSelectedHighlight] = useState<ResearchHighlight | null>(null);
+
+  function handleRefreshRecommendations() {
+    setRecommendedHighlights(getFeaturedResearchHighlights(8));
+    setSelectedHighlight(null);
+  }
 
   useEffect(() => {
     if (!selectedHighlight) {
@@ -29,16 +37,21 @@ export function RecommendedUniversities() {
       <div className="academic-section-head">
         <div>
           <span id="academic-recommendations-title" className="eyebrow">
-            成果 / 专利卡片
+            成果 / 专利卡片 · {researchHighlights.length} 项
           </span>
           <h2>优先浏览这些可转化线索</h2>
         </div>
-        <p>
-          覆盖中轻科技新能源电池工程化技术、中科曙光先进计算能力，以及青岛大学、西安交通大学等可转化成果，用于快速判断技术方向、成熟度和应用场景。
-        </p>
+        <div className="academic-section-actions">
+          <p>
+            覆盖保利中轻技术手册、中科曙光能力介绍、青岛大学专利与可转化成果、西安交通大学科技成果项目，用于快速判断技术方向、成熟度和应用场景。
+          </p>
+          <button className="recommendation-refresh-button" type="button" onClick={handleRefreshRecommendations}>
+            换一批
+          </button>
+        </div>
       </div>
 
-      <div className="academic-card-grid">
+      <div className="academic-card-grid" aria-live="polite">
         {recommendedHighlights.map((highlight) => (
           <button
             key={highlight.id}
