@@ -2334,8 +2334,16 @@ html[data-theme='light'] .app-backdrop-glow-right {
 .chat-markdown pre,
 .chat-markdown blockquote,
 .chat-markdown table,
-.chat-markdown hr {
+.chat-markdown hr,
+.chat-markdown details,
+.chat-markdown dl,
+.chat-markdown img {
   margin: 0.55rem 0 0;
+}
+
+.chat-markdown > div:not(.chat-markdown-table-wrap),
+.chat-markdown > section {
+  margin-top: 0.55rem;
 }
 
 .chat-markdown li + li {
@@ -2360,7 +2368,9 @@ html[data-theme='light'] .app-backdrop-glow-right {
 
 .chat-markdown p,
 .chat-markdown li,
-.chat-markdown blockquote {
+.chat-markdown blockquote,
+.chat-markdown dd,
+.chat-markdown dt {
   line-height: 1.8;
 }
 
@@ -2371,6 +2381,27 @@ html[data-theme='light'] .app-backdrop-glow-right {
 
 .chat-markdown strong {
   color: var(--text-main);
+}
+
+.chat-markdown mark {
+  border-radius: 0.35rem;
+  background: rgba(255, 211, 105, 0.24);
+  color: var(--text-main);
+  padding: 0.02rem 0.24rem;
+}
+
+.chat-markdown kbd {
+  display: inline-block;
+  min-width: 1.45em;
+  padding: 0.05rem 0.32rem;
+  border: 1px solid rgba(149, 169, 211, 0.22);
+  border-radius: 0.38rem;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.84em;
+  text-align: center;
 }
 
 .chat-markdown code {
@@ -2402,6 +2433,46 @@ html[data-theme='light'] .app-backdrop-glow-right {
   padding-left: 0.9rem;
   border-left: 3px solid rgba(120, 168, 255, 0.32);
   color: var(--text-muted);
+}
+
+.chat-markdown details {
+  padding: 0.72rem 0.85rem;
+  border: 1px solid rgba(149, 169, 211, 0.14);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.chat-markdown summary {
+  cursor: pointer;
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.chat-markdown dl {
+  display: grid;
+  gap: 0.22rem 0.9rem;
+}
+
+.chat-markdown dt {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.chat-markdown dd {
+  margin: 0 0 0.35rem 0;
+  color: var(--text-soft);
+}
+
+.chat-markdown img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.85rem;
+}
+
+.chat-markdown input[type='checkbox'] {
+  margin: 0 0.45rem 0 0;
+  accent-color: var(--accent);
 }
 
 .chat-markdown-table-wrap {

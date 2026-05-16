@@ -1,6 +1,9 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import type { Root, Table, TableCell, TableRow } from 'mdast';
 import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
+import type { Options as RehypeSanitizeOptions } from 'rehype-sanitize';
 import remarkGfm from 'remark-gfm';
 
 interface ChatMarkdownProps {
@@ -24,6 +27,17 @@ const MATCH_SCORE_HEADERS = new Set([
   'compatibility',
   'compatibilityscore',
 ]);
+const EXTRA_SAFE_HTML_TAGS = ['mark', 'small', 'u'];
+
+const chatHtmlSchema: RehypeSanitizeOptions = {
+  ...defaultSchema,
+  attributes: {
+    ...defaultSchema.attributes,
+    a: [...(defaultSchema.attributes?.a ?? []), 'title'],
+    img: [...(defaultSchema.attributes?.img ?? []), 'alt', 'title', 'width', 'height'],
+  },
+  tagNames: [...(defaultSchema.tagNames ?? []), ...EXTRA_SAFE_HTML_TAGS],
+};
 
 function getCellText(cell: TableCell) {
   return cell.children
@@ -146,6 +160,7 @@ export function ChatMarkdown({ className, content }: ChatMarkdownProps) {
   return (
     <div className={className}>
       <ReactMarkdown
+        rehypePlugins={[rehypeRaw, [rehypeSanitize, chatHtmlSchema]]}
         remarkPlugins={[remarkGfm, remarkMatchScoreStars]}
         components={{
           a: ({ ...props }: ComponentPropsWithoutRef<'a'>) => (
