@@ -30,6 +30,7 @@ const MATCH_SCORE_HEADERS = new Set([
 const EXTRA_SAFE_HTML_TAGS = ['caption', 'col', 'colgroup', 'mark', 'small', 'u'];
 const ESCAPED_HTML_PATTERN =
   /&lt;\/?(?:a|blockquote|br|caption|code|col|colgroup|details|div|em|h[1-6]|img|li|mark|ol|p|pre|section|small|span|strong|summary|table|tbody|td|tfoot|th|thead|tr|ul)\b/i;
+const HTML_TABLE_PATTERN = /<table\b[\s\S]*?<\/table>/gi;
 
 const chatHtmlSchema: RehypeSanitizeOptions = {
   ...defaultSchema,
@@ -54,6 +55,55 @@ function decodeEscapedHtml(value: string) {
 
 function normalizeRenderableContent(value: string) {
   return ESCAPED_HTML_PATTERN.test(value) ? decodeEscapedHtml(value) : value;
+}
+
+function splitRenderableContent(value: string) {
+  const segments: Array<{ content: string; type: 'markdown' | 'table' }> = [];
+  let lastIndex = 0;
+
+  for (const match of value.matchAll(HTML_TABLE_PATTERN)) {
+    const tableHtml = match[0];
+    const matchIndex = match.index ?? 0;
+    const markdownContent = value.slice(lastIndex, matchIndex);
+
+    if (markdownContent) {
+      segments.push({ content: markdownContent, type: 'markdown' });
+    }
+
+    segments.push({ content: tableHtml, type: 'table' });
+    lastIndex = matchIndex + tableHtml.length;
+  }
+
+  const trailingContent = value.slice(lastIndex);
+
+  if (trailingContent) {
+    segments.push({ content: trailingContent, type: 'markdown' });
+  }
+
+  return segments.length > 0 ? segments : [{ content: value, type: 'markdown' as const }];
+}
+
+function getCellLines(cell: Element) {
+  return cell.innerHTML
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(?:p|div|li)>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .split('\n')
+    .map((line) => line.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+}
+
+function renderCellContent(lines: string[]) {
+  if (lines.length <= 1) {
+    return lines[0] ?? '';
+  }
+
+  return lines.map((line, index) => (
+    <span key={`${line}-${index}`}>
+      {line}
+      {index < lines.length - 1 ? <br /> : null}
+    </span>
+  ));
 }
 
 function getCellText(cell: TableCell) {
@@ -173,53 +223,113 @@ function remarkMatchScoreStars() {
   };
 }
 
+function MarkdownSegment({ content }: { content: string }) {
+  return (
+    <ReactMarkdown
+      rehypePlugins={[rehypeRaw, [rehypeSanitize, chatHtmlSchema]]}
+      remarkPlugins={[remarkGfm, remarkMatchScoreStars]}
+      components={{
+        a: ({ ...props }: ComponentPropsWithoutRef<'a'>) => (
+          <a
+            {...props}
+            rel="noreferrer noopener"
+            target="_blank"
+          />
+        ),
+        table: ({ ...props }: ComponentPropsWithoutRef<'table'>) => (
+          <div className="chat-markdown-table-wrap">
+            <table {...props} />
+          </div>
+        ),
+        td: ({ children, ...props }: ComponentPropsWithoutRef<'td'>) => {
+          const text = getReactText(children);
+
+          return (
+            <td {...props}>
+              {MATCH_STARS_TEXT_PATTERN.test(text) ? (
+                <span className="match-stars" aria-label={`${text.split(FILLED_STAR).length - 1} / ${MAX_MATCH_STARS}`}>
+                  {text.split('').map((star, index) => (
+                    <span
+                      key={`${star}-${index}`}
+                      className={star === FILLED_STAR ? 'match-star-filled' : 'match-star-empty'}
+                    >
+                      {star}
+                    </span>
+                  ))}
+                </span>
+              ) : (
+                children
+              )}
+            </td>
+          );
+        },
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+}
+
+function HtmlTableSegment({ content }: { content: string }) {
+  if (typeof DOMParser === 'undefined') {
+    return <MarkdownSegment content={content} />;
+  }
+
+  const document = new DOMParser().parseFromString(content, 'text/html');
+  const table = document.querySelector('table');
+
+  if (!table) {
+    return <MarkdownSegment content={content} />;
+  }
+
+  const rows = Array.from(table.querySelectorAll('tr')).map((row) =>
+    Array.from(row.children)
+      .filter((cell) => cell.tagName === 'TD' || cell.tagName === 'TH')
+      .map((cell) => ({
+        isHeader: cell.tagName === 'TH',
+        lines: getCellLines(cell),
+      })),
+  );
+
+  if (rows.length === 0) {
+    return <MarkdownSegment content={content} />;
+  }
+
+  return (
+    <div className="chat-markdown-table-wrap">
+      <table>
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <tr key={`row-${rowIndex}`}>
+              {row.map((cell, cellIndex) => {
+                const CellTag = cell.isHeader ? 'th' : 'td';
+
+                return (
+                  <CellTag key={`cell-${rowIndex}-${cellIndex}`}>
+                    {renderCellContent(cell.lines)}
+                  </CellTag>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export function ChatMarkdown({ className, content }: ChatMarkdownProps) {
-  const renderableContent = normalizeRenderableContent(content);
+  const segments = splitRenderableContent(normalizeRenderableContent(content));
 
   return (
     <div className={className}>
-      <ReactMarkdown
-        rehypePlugins={[rehypeRaw, [rehypeSanitize, chatHtmlSchema]]}
-        remarkPlugins={[remarkGfm, remarkMatchScoreStars]}
-        components={{
-          a: ({ ...props }: ComponentPropsWithoutRef<'a'>) => (
-            <a
-              {...props}
-              rel="noreferrer noopener"
-              target="_blank"
-            />
-          ),
-          table: ({ ...props }: ComponentPropsWithoutRef<'table'>) => (
-            <div className="chat-markdown-table-wrap">
-              <table {...props} />
-            </div>
-          ),
-          td: ({ children, ...props }: ComponentPropsWithoutRef<'td'>) => {
-            const text = getReactText(children);
-
-            return (
-              <td {...props}>
-                {MATCH_STARS_TEXT_PATTERN.test(text) ? (
-                  <span className="match-stars" aria-label={`${text.split(FILLED_STAR).length - 1} / ${MAX_MATCH_STARS}`}>
-                    {text.split('').map((star, index) => (
-                      <span
-                        key={`${star}-${index}`}
-                        className={star === FILLED_STAR ? 'match-star-filled' : 'match-star-empty'}
-                      >
-                        {star}
-                      </span>
-                    ))}
-                  </span>
-                ) : (
-                  children
-                )}
-              </td>
-            );
-          },
-        }}
-      >
-        {renderableContent}
-      </ReactMarkdown>
+      {segments.map((segment, index) =>
+        segment.type === 'table' ? (
+          <HtmlTableSegment key={`table-${index}`} content={segment.content} />
+        ) : (
+          <MarkdownSegment key={`markdown-${index}`} content={segment.content} />
+        ),
+      )}
     </div>
   );
 }
