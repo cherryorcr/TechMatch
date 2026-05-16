@@ -14,6 +14,10 @@ function getMessageStatusLabel(message: ChatMessage) {
     return '发送中...';
   }
 
+  if (message.status === 'streaming') {
+    return '生成中...';
+  }
+
   if (message.status === 'failed') {
     return '发送失败';
   }
@@ -52,7 +56,7 @@ export function ChatPage() {
     }
 
     thread.scrollTop = thread.scrollHeight;
-  }, [session?.messages.length]);
+  }, [session?.messages]);
 
   useEffect(() => {
     if (!session) {

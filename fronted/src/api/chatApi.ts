@@ -51,6 +51,18 @@ const PROCESS_OUTPUT_TOP_LEVEL_FIELDS = [
   'html',
   'html_output',
 ] as const;
+const STREAM_DELTA_FIELDS = [
+  'delta',
+  'text_delta',
+  'content_delta',
+  'chunk',
+  'token',
+  'text',
+  'content',
+  'answer',
+  'output',
+] as const;
+const STREAM_DONE_MESSAGES = new Set(['[DONE]', '[done]', 'DONE', 'done']);
 
 const processModeMap: Record<HomeModeId, number> = {
   'internal-industry': 0,
@@ -97,6 +109,10 @@ interface ProcessResponse {
   stage?: string;
 }
 
+interface ProcessRequestOptions {
+  onOutputDelta?: (delta: string) => void;
+}
+
 type LocalFileRecord = {
   file: UploadedFile;
   url: string;
@@ -128,6 +144,18 @@ async function parseResponse(response: Response) {
 
   const text = await response.text();
   return text ? { message: text } : null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function tryParseJson(value: string) {
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return undefined;
+  }
 }
 
 function getErrorMessage(payload: unknown, status: number) {
@@ -291,7 +319,7 @@ function getFirstStringField(
   return undefined;
 }
 
-function getProcessOutput(response: ProcessResponse) {
+function getExplicitProcessOutput(response: ProcessResponse) {
   const dataOutput = getFirstStringField(response.data, PROCESS_OUTPUT_DATA_FIELDS);
 
   if (dataOutput) {
@@ -307,7 +335,298 @@ function getProcessOutput(response: ProcessResponse) {
     return topLevelOutput;
   }
 
+  return undefined;
+}
+
+function getProcessOutput(response: ProcessResponse) {
+  const output = getExplicitProcessOutput(response);
+
+  if (output) {
+    return output;
+  }
+
   return '后端已处理完成，但没有返回可展示内容。';
+}
+
+function getOpenAiChoiceDelta(payload: Record<string, unknown>) {
+  const choices = payload.choices;
+
+  if (!Array.isArray(choices)) {
+    return undefined;
+  }
+
+  const firstChoice = choices[0];
+
+  if (!isRecord(firstChoice)) {
+    return undefined;
+  }
+
+  const delta = firstChoice.delta;
+
+  if (isRecord(delta) && typeof delta.content === 'string') {
+    return delta.content;
+  }
+
+  return typeof firstChoice.text === 'string' ? firstChoice.text : undefined;
+}
+
+function getStreamDelta(payload: unknown): string | undefined {
+  if (typeof payload === 'string') {
+    return payload;
+  }
+
+  if (!isRecord(payload)) {
+    return undefined;
+  }
+
+  const choiceDelta = getOpenAiChoiceDelta(payload);
+
+  if (choiceDelta) {
+    return choiceDelta;
+  }
+
+  const nestedData = payload.data;
+
+  if (typeof nestedData === 'string') {
+    return nestedData;
+  }
+
+  if (isRecord(nestedData)) {
+    const nestedDelta = getStreamDelta(nestedData);
+
+    if (nestedDelta) {
+      return nestedDelta;
+    }
+  }
+
+  for (const field of STREAM_DELTA_FIELDS) {
+    const value = payload[field];
+
+    if (typeof value === 'string') {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
+function isProcessResponsePayload(payload: unknown): payload is ProcessResponse {
+  if (!isRecord(payload)) {
+    return false;
+  }
+
+  return (
+    isRecord(payload.data) ||
+    typeof payload.stage === 'string' ||
+    typeof payload.status === 'string' ||
+    PROCESS_OUTPUT_DATA_FIELDS.some((field) => typeof payload[field] === 'string')
+  );
+}
+
+function createStreamFallbackResponse(output: string): ProcessResponse {
+  return {
+    status: 'success',
+    data: {
+      status: 'success',
+      final_output: output,
+    },
+  };
+}
+
+function mergeStreamOutput(response: ProcessResponse, output: string): ProcessResponse {
+  const explicitOutput = getExplicitProcessOutput(response);
+
+  if (!output.trim() || (explicitOutput && explicitOutput.length >= output.length)) {
+    return response;
+  }
+
+  const data = isRecord(response.data) ? response.data : {};
+
+  return {
+    ...response,
+    data: {
+      ...data,
+      final_output: output,
+    },
+  };
+}
+
+function normalizeStreamResponse(
+  lastProcessPayload: ProcessResponse | null,
+  accumulatedOutput: string,
+) {
+  if (lastProcessPayload) {
+    return mergeStreamOutput(lastProcessPayload, accumulatedOutput);
+  }
+
+  return createStreamFallbackResponse(accumulatedOutput);
+}
+
+function isStreamContentType(contentType: string) {
+  return (
+    contentType.includes('text/event-stream') ||
+    contentType.includes('application/x-ndjson') ||
+    contentType.includes('application/jsonl') ||
+    contentType.includes('text/plain') ||
+    contentType.includes('text/markdown')
+  );
+}
+
+function getSseFrameData(frame: string) {
+  const dataLines = frame
+    .split('\n')
+    .filter((line) => line.startsWith('data:'))
+    .map((line) => line.slice(5).replace(/^ /, ''));
+
+  return dataLines.join('\n');
+}
+
+async function parseStreamResponse(
+  response: Response,
+  options: ProcessRequestOptions = {},
+) {
+  const reader = response.body?.getReader();
+
+  if (!reader) {
+    return parseResponse(response) as Promise<ProcessResponse | null>;
+  }
+
+  const contentType = response.headers.get('content-type') ?? '';
+  const isSse = contentType.includes('text/event-stream');
+  const isJsonLines =
+    contentType.includes('application/x-ndjson') || contentType.includes('application/jsonl');
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let accumulatedOutput = '';
+  let lastProcessPayload: ProcessResponse | null = null;
+
+  function emitDelta(delta: string) {
+    if (!delta) {
+      return;
+    }
+
+    accumulatedOutput += delta;
+    options.onOutputDelta?.(delta);
+  }
+
+  function handlePayload(payload: unknown) {
+    if (isProcessResponsePayload(payload)) {
+      lastProcessPayload = payload;
+    }
+
+    const delta = getStreamDelta(payload);
+
+    if (delta) {
+      emitDelta(delta);
+    }
+  }
+
+  function handleTextPayload(value: string) {
+    const trimmed = value.trim();
+
+    if (!trimmed || STREAM_DONE_MESSAGES.has(trimmed)) {
+      return;
+    }
+
+    const parsed = tryParseJson(trimmed);
+
+    if (parsed !== undefined) {
+      handlePayload(parsed);
+      return;
+    }
+
+    emitDelta(value);
+  }
+
+  function consumeSseBuffer() {
+    let boundaryIndex = buffer.indexOf('\n\n');
+
+    while (boundaryIndex >= 0) {
+      const frame = buffer.slice(0, boundaryIndex);
+      buffer = buffer.slice(boundaryIndex + 2);
+      handleTextPayload(getSseFrameData(frame));
+      boundaryIndex = buffer.indexOf('\n\n');
+    }
+  }
+
+  function consumeJsonLinesBuffer() {
+    let boundaryIndex = buffer.indexOf('\n');
+
+    while (boundaryIndex >= 0) {
+      const line = buffer.slice(0, boundaryIndex);
+      buffer = buffer.slice(boundaryIndex + 1);
+      handleTextPayload(line);
+      boundaryIndex = buffer.indexOf('\n');
+    }
+  }
+
+  while (true) {
+    const { done, value } = await reader.read();
+
+    if (done) {
+      break;
+    }
+
+    const chunk = decoder.decode(value, { stream: true });
+
+    if (isSse || isJsonLines) {
+      buffer += chunk.replace(/\r\n/g, '\n');
+
+      if (isSse) {
+        consumeSseBuffer();
+      } else {
+        consumeJsonLinesBuffer();
+      }
+
+      continue;
+    }
+
+    emitDelta(chunk);
+  }
+
+  const rest = decoder.decode();
+
+  if (rest) {
+    if (isSse || isJsonLines) {
+      buffer += rest.replace(/\r\n/g, '\n');
+    } else {
+      emitDelta(rest);
+    }
+  }
+
+  if ((isSse || isJsonLines) && buffer.trim()) {
+    if (isSse) {
+      handleTextPayload(getSseFrameData(buffer));
+    } else {
+      handleTextPayload(buffer);
+    }
+  }
+
+  return normalizeStreamResponse(lastProcessPayload, accumulatedOutput);
+}
+
+async function parseProcessResponse(
+  response: Response,
+  options: ProcessRequestOptions = {},
+) {
+  const contentType = response.headers.get('content-type') ?? '';
+
+  if (contentType.includes('application/json')) {
+    return response.json() as Promise<ProcessResponse | null>;
+  }
+
+  if (response.body && (options.onOutputDelta || isStreamContentType(contentType))) {
+    return parseStreamResponse(response, options);
+  }
+
+  const text = await response.text();
+
+  if (!text) {
+    return null;
+  }
+
+  const parsed = tryParseJson(text);
+  return parsed && isRecord(parsed) ? (parsed as ProcessResponse) : { message: text };
 }
 
 function hasBusinessError(response: ProcessResponse) {
@@ -435,26 +754,36 @@ function shouldTryNextProcessEndpoint(status: number) {
   return status === 404 || status === 405;
 }
 
-async function requestProcessFromBaseUrl(baseUrl: string, payload: ProcessRequestPayload) {
+async function requestProcessFromBaseUrl(
+  baseUrl: string,
+  payload: ProcessRequestPayload,
+  options: ProcessRequestOptions = {},
+) {
   const response = await fetch(joinUrl(baseUrl, '/process'), {
     method: 'POST',
     headers: {
-      Accept: 'application/json',
+      Accept: 'text/event-stream, application/x-ndjson, application/json',
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(payload),
   });
-  const parsed = (await parseResponse(response)) as ProcessResponse | null;
+  const parsed =
+    !response.ok && response.status !== 207
+      ? ((await parseResponse(response)) as ProcessResponse | null)
+      : await parseProcessResponse(response, options);
 
   return { parsed, response };
 }
 
-async function requestProcess(payload: ProcessRequestPayload) {
+async function requestProcess(
+  payload: ProcessRequestPayload,
+  options: ProcessRequestOptions = {},
+) {
   let lastParsed: ProcessResponse | null = null;
   let lastStatus = 0;
 
   for (const [index, baseUrl] of PROCESS_API_BASE_URLS.entries()) {
-    const { parsed, response } = await requestProcessFromBaseUrl(baseUrl, payload);
+    const { parsed, response } = await requestProcessFromBaseUrl(baseUrl, payload, options);
     lastParsed = parsed;
     lastStatus = response.status;
 
@@ -486,7 +815,11 @@ async function requestProcess(payload: ProcessRequestPayload) {
 }
 
 export const chatApi = {
-  async appendMessage(sessionId: string, payload: AppendMessagePayload) {
+  async appendMessage(
+    sessionId: string,
+    payload: AppendMessagePayload,
+    requestOptions: ProcessRequestOptions = {},
+  ) {
     const currentSession = findSession(sessionId);
 
     if (!currentSession) {
@@ -510,6 +843,7 @@ export const chatApi = {
         requirement: getInitialRequirement(currentSession, payload.prompt),
         sessionId,
       }),
+      requestOptions,
     );
     const assistantMessage = createAssistantMessage(
       response,
@@ -529,7 +863,10 @@ export const chatApi = {
       recommendationPanel: buildRecommendationPanel(session, response),
     } satisfies SessionDetailResponse;
   },
-  async createSession(payload: CreateSessionPayload) {
+  async createSession(
+    payload: CreateSessionPayload,
+    requestOptions: ProcessRequestOptions = {},
+  ) {
     const options = normalizeMatchOptions(payload.options);
     const sessionId = createId(`process-mode-${processModeMap[payload.modeId]}`);
     const now = Date.now();
@@ -549,6 +886,7 @@ export const chatApi = {
         requirement: payload.prompt,
         sessionId,
       }),
+      requestOptions,
     );
     const assistantMessage = createAssistantMessage(response, options.showReasoning);
     const session: ChatSession = {

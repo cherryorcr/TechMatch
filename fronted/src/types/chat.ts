@@ -20,7 +20,7 @@ export interface ChatMessage {
   meta: string;
   attachments?: ChatAttachment[];
   reasoning?: string;
-  status?: 'sending' | 'failed';
+  status?: 'sending' | 'streaming' | 'failed';
 }
 
 export interface UploadedFile {

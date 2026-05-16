@@ -81,6 +81,16 @@ function createOptimisticUserMessage(
   };
 }
 
+function createOptimisticAssistantMessage(): ChatMessage {
+  return {
+    id: createOptimisticMessageId(),
+    role: 'assistant',
+    content: '',
+    meta: 'TechMatch AI',
+    status: 'streaming',
+  };
+}
+
 function updateMessageStatus(
   messages: ChatMessage[],
   messageId: string,
@@ -96,6 +106,28 @@ function updateMessageStatus(
       status,
     };
   });
+}
+
+function appendMessageContent(
+  messages: ChatMessage[],
+  messageId: string,
+  delta: string,
+) {
+  return messages.map((message) => {
+    if (message.id !== messageId) {
+      return message;
+    }
+
+    return {
+      ...message,
+      content: `${message.content}${delta}`,
+      status: 'streaming' as const,
+    };
+  });
+}
+
+function removeMessage(messages: ChatMessage[], messageId: string) {
+  return messages.filter((message) => message.id !== messageId);
 }
 
 export function ChatSessionsProvider({ children }: { children: ReactNode }) {
@@ -215,12 +247,17 @@ export function ChatSessionsProvider({ children }: { children: ReactNode }) {
       const optimisticMessage = currentSession
         ? createOptimisticUserMessage(prompt, currentSession.modeLabel, files)
         : null;
+      const optimisticAssistant = currentSession ? createOptimisticAssistantMessage() : null;
       const optimisticSession =
-        currentSession && optimisticMessage
+        currentSession && optimisticMessage && optimisticAssistant
           ? {
               ...currentSession,
               options: nextOptions ?? currentSession.options,
-              messages: [...currentSession.messages, optimisticMessage],
+              messages: [
+                ...currentSession.messages,
+                optimisticMessage,
+                optimisticAssistant,
+              ],
               updatedAt: Date.now(),
             }
           : null;
@@ -239,11 +276,50 @@ export function ChatSessionsProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       try {
-        const response = await chatApi.appendMessage(sessionId, {
-          fileIds: files.map((file) => file.id),
-          options,
-          prompt,
-        });
+        const response = await chatApi.appendMessage(
+          sessionId,
+          {
+            fileIds: files.map((file) => file.id),
+            options,
+            prompt,
+          },
+          {
+            onOutputDelta: (delta) => {
+              if (!optimisticMessage || !optimisticAssistant) {
+                return;
+              }
+
+              setSessionById((current) => {
+                const streamingSession = current[sessionId];
+
+                if (!streamingSession) {
+                  return current;
+                }
+
+                const messagesWithSentUser = updateMessageStatus(
+                  streamingSession.messages,
+                  optimisticMessage.id,
+                  undefined,
+                );
+                const streamingMessages = appendMessageContent(
+                  messagesWithSentUser,
+                  optimisticAssistant.id,
+                  delta,
+                );
+                const nextSession: ChatSession = {
+                  ...streamingSession,
+                  messages: streamingMessages,
+                  updatedAt: Date.now(),
+                };
+
+                return {
+                  ...current,
+                  [sessionId]: nextSession,
+                };
+              });
+            },
+          },
+        );
         setSessionById((current) => ({
           ...current,
           [sessionId]: response.session,
@@ -257,10 +333,13 @@ export function ChatSessionsProvider({ children }: { children: ReactNode }) {
         );
       } catch (requestError) {
         if (optimisticSession && optimisticMessage) {
+          const messagesWithoutAssistant = optimisticAssistant
+            ? removeMessage(optimisticSession.messages, optimisticAssistant.id)
+            : optimisticSession.messages;
           const failedSession: ChatSession = {
             ...optimisticSession,
             messages: updateMessageStatus(
-              optimisticSession.messages,
+              messagesWithoutAssistant,
               optimisticMessage.id,
               'failed',
             ),
