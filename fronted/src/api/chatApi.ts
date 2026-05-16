@@ -494,6 +494,7 @@ export const chatApi = {
     }
 
     const now = Date.now();
+    const options = normalizeMatchOptions(payload.options ?? currentSession.options);
     const userMessage: ChatMessage = {
       id: createId('user'),
       role: 'user',
@@ -505,17 +506,18 @@ export const chatApi = {
       buildProcessPayload({
         message: payload.prompt,
         modeId: currentSession.modeId,
-        options: currentSession.options,
+        options,
         requirement: getInitialRequirement(currentSession, payload.prompt),
         sessionId,
       }),
     );
     const assistantMessage = createAssistantMessage(
       response,
-      currentSession.options.showReasoning,
+      options.showReasoning,
     );
     const session: ChatSession = {
       ...currentSession,
+      options,
       messages: [...currentSession.messages, userMessage, assistantMessage],
       updatedAt: now,
     };

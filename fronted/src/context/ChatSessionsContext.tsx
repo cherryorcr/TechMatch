@@ -14,6 +14,7 @@ import type {
   ChatSessionSummary,
   ContextualRecommendationState,
   CreateSessionPayload,
+  MatchOptions,
   UploadedFile,
 } from '../types/chat';
 
@@ -22,6 +23,7 @@ interface ChatSessionsContextValue {
   createSession: (params: CreateSessionPayload) => Promise<string>;
   appendMessage: (params: {
     files?: UploadedFile[];
+    options?: MatchOptions;
     prompt: string;
     sessionId: string;
   }) => Promise<void>;
@@ -206,9 +208,10 @@ export function ChatSessionsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const appendMessage = useCallback(
-    async (params: { files?: UploadedFile[]; prompt: string; sessionId: string }) => {
-      const { files = [], prompt, sessionId } = params;
+    async (params: { files?: UploadedFile[]; options?: MatchOptions; prompt: string; sessionId: string }) => {
+      const { files = [], options, prompt, sessionId } = params;
       const currentSession = sessionById[sessionId];
+      const nextOptions = options ?? currentSession?.options;
       const optimisticMessage = currentSession
         ? createOptimisticUserMessage(prompt, currentSession.modeLabel, files)
         : null;
@@ -216,6 +219,7 @@ export function ChatSessionsProvider({ children }: { children: ReactNode }) {
         currentSession && optimisticMessage
           ? {
               ...currentSession,
+              options: nextOptions ?? currentSession.options,
               messages: [...currentSession.messages, optimisticMessage],
               updatedAt: Date.now(),
             }
@@ -237,6 +241,7 @@ export function ChatSessionsProvider({ children }: { children: ReactNode }) {
       try {
         const response = await chatApi.appendMessage(sessionId, {
           fileIds: files.map((file) => file.id),
+          options,
           prompt,
         });
         setSessionById((current) => ({

@@ -37,7 +37,7 @@ export function HomePage() {
         modeLabel: session.modeLabel,
         title: session.title,
         summary: session.latestMessage || '继续完成这段多轮对话',
-        timestamp: '',
+        timestamp: `Top ${session.options.paperCount} · ${session.options.matchContent}`,
         prompt: '',
       })),
     [sessionSummaries],

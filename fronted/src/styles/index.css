@@ -2224,7 +2224,47 @@ html[data-theme='light'] .app-backdrop-glow-right {
 }
 
 .session-chip-list {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.recent-sessions-strip .session-chip {
+  display: grid;
+  gap: 0.55rem;
+  min-height: 86px;
+  padding: 0.82rem 0.9rem;
+}
+
+.recent-sessions-strip .session-chip strong {
+  display: -webkit-box;
+  min-height: 2.8em;
+  overflow: hidden;
+  color: var(--text-soft);
+  line-height: 1.42;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.session-chip-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+  align-items: center;
+}
+
+.session-chip-meta-row span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  max-width: 100%;
+  padding: 0.16rem 0.46rem;
+  border: 1px solid rgba(120, 168, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(120, 168, 255, 0.07);
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .recommendation-column {
@@ -2729,6 +2769,35 @@ html[data-theme='light'] .app-backdrop-glow-right {
   resize: vertical;
 }
 
+.chat-composer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.62rem;
+  align-items: center;
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(149, 169, 211, 0.12);
+}
+
+.chat-composer-options .home-option-field,
+.chat-composer-options .home-option-toggle {
+  min-height: 40px;
+  padding: 0.5rem 0.64rem;
+  border-radius: 0.82rem;
+}
+
+.chat-composer-options .home-option-stepper {
+  min-width: 190px;
+}
+
+.chat-composer-options .home-option-content {
+  min-width: 190px;
+}
+
+.chat-composer-options .paper-preset {
+  padding: 0.46rem 0.66rem;
+}
+
 .chat-composer-footer {
   margin-top: 0.9rem;
   justify-content: flex-end;
@@ -3211,6 +3280,11 @@ html[data-theme='light'] .app-backdrop-glow-right {
 
   .home-options-row {
     flex-direction: column;
+  }
+
+  .chat-composer-options {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .home-option-presets {

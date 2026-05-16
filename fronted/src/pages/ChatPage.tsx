@@ -5,7 +5,8 @@ import { ChatMarkdown } from '../components/chat/ChatMarkdown';
 import { AttachmentPicker } from '../components/files/AttachmentPicker';
 import { RecommendationPanel } from '../components/home/RecommendationPanel';
 import { useChatSessions } from '../context/ChatSessionsContext';
-import type { ChatMessage } from '../types/chat';
+import { defaultMatchOptions, matchContentOptions, paperCountOptions } from '../mock/home';
+import type { ChatMessage, MatchContent, MatchOptions } from '../types/chat';
 import { formatFileSize } from '../utils/files';
 
 function getMessageStatusLabel(message: ChatMessage) {
@@ -34,6 +35,9 @@ export function ChatPage() {
   const session = getSessionById(sessionId);
   const recommendationPanel = getRecommendationPanel(sessionId);
   const [draft, setDraft] = useState('');
+  const [matchContent, setMatchContent] = useState<MatchContent>(defaultMatchOptions.matchContent);
+  const [paperCount, setPaperCount] = useState(defaultMatchOptions.paperCount);
+  const [showReasoning, setShowReasoning] = useState(defaultMatchOptions.showReasoning);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const [missingSession, setMissingSession] = useState(false);
@@ -49,6 +53,16 @@ export function ChatPage() {
 
     thread.scrollTop = thread.scrollHeight;
   }, [session?.messages.length]);
+
+  useEffect(() => {
+    if (!session) {
+      return;
+    }
+
+    setMatchContent(session.options.matchContent);
+    setPaperCount(session.options.paperCount);
+    setShowReasoning(session.options.showReasoning);
+  }, [session?.id]);
 
   useEffect(() => {
     let isActive = true;
@@ -82,6 +96,15 @@ export function ChatPage() {
     };
   }, [loadSession, session, sessionId]);
 
+  function handlePaperCountChange(nextValue: number) {
+    if (!Number.isFinite(nextValue)) {
+      setPaperCount(1);
+      return;
+    }
+
+    setPaperCount(Math.max(1, Math.min(500, Math.floor(nextValue))));
+  }
+
   async function handleSubmit(nextPrompt?: string) {
     const prompt = (nextPrompt ?? draft).trim();
 
@@ -99,6 +122,11 @@ export function ChatPage() {
           : [];
       await appendMessage({
         files: uploadedFiles,
+        options: {
+          matchContent,
+          paperCount,
+          showReasoning,
+        } satisfies MatchOptions,
         prompt,
         sessionId: session.id,
       });
@@ -276,6 +304,76 @@ export function ChatPage() {
                 onAddFiles={handleAddFiles}
                 onRemoveFile={handleRemoveFile}
               />
+
+              <div className="chat-composer-options" aria-label="本轮匹配参数">
+                <label className="home-option-field home-option-stepper">
+                  <span>TopK</span>
+                  <div className="count-stepper">
+                    <button
+                      disabled={sending}
+                      type="button"
+                      onClick={() => handlePaperCountChange(Math.max(1, paperCount - 1))}
+                    >
+                      -
+                    </button>
+                    <input
+                      disabled={sending}
+                      min={1}
+                      step={1}
+                      type="number"
+                      value={paperCount}
+                      onChange={(event) => handlePaperCountChange(Number(event.target.value))}
+                    />
+                    <button
+                      disabled={sending}
+                      type="button"
+                      onClick={() => handlePaperCountChange(paperCount + 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                </label>
+
+                <label className="home-option-field home-option-content">
+                  <span>匹配内容</span>
+                  <select
+                    className="match-content-select"
+                    disabled={sending}
+                    value={matchContent}
+                    onChange={(event) => setMatchContent(event.target.value as MatchContent)}
+                  >
+                    {matchContentOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="home-option-toggle">
+                  <input
+                    checked={showReasoning}
+                    disabled={sending}
+                    type="checkbox"
+                    onChange={(event) => setShowReasoning(event.target.checked)}
+                  />
+                  <span>思考过程</span>
+                </label>
+
+                <div className="home-option-presets">
+                  {paperCountOptions.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      disabled={sending}
+                      className={paperCount === option ? 'paper-preset paper-preset-active' : 'paper-preset'}
+                      onClick={() => handlePaperCountChange(option)}
+                    >
+                      Top {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               <div className="chat-composer-footer">
                 <span>

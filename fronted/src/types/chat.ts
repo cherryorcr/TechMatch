@@ -121,6 +121,7 @@ export interface CreateSessionPayload {
 
 export interface AppendMessagePayload {
   fileIds?: string[];
+  options?: MatchOptions;
   prompt: string;
 }
 
