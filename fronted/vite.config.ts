@@ -5,8 +5,8 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
-    // Use relative asset paths in dist so preview/static opening does not 404 /assets.
-    base: './',
+    // Use root-relative assets so direct visits to nested routes like /chat/:id load correctly.
+    base: '/',
     plugins: [react()],
     server: {
       strictPort: true,
