@@ -140,6 +140,14 @@ export function HomePage() {
             </aside>
           </div>
 
+          <ModeSwitcher
+            activeMode={activeMode}
+            modes={homeModeList}
+            onChange={setActiveMode}
+          />
+
+          <PromptSuggestions suggestions={currentMode.suggestions} onSelect={setDraft} />
+
           <div className="home-command-shell">
             <div className="home-command-header">
               <div>
@@ -150,7 +158,9 @@ export function HomePage() {
 
               <div className="home-command-badges">
                 <span className="home-command-pill">Multi-turn</span>
-                <span className="home-command-pill">{matchContent}</span>
+                {activeMode !== 'tech-recommendation' ? (
+                  <span className="home-command-pill">{matchContent}</span>
+                ) : null}
                 <span className="home-command-pill">Top {paperCount}</span>
               </div>
             </div>
@@ -165,6 +175,7 @@ export function HomePage() {
               matchContent={matchContent}
               paperCount={paperCount}
               placeholder={currentMode.placeholder}
+              showMatchContent={activeMode !== 'tech-recommendation'}
               showReasoning={showReasoning}
               value={draft}
               onAddFiles={handleAddFiles}
@@ -176,14 +187,6 @@ export function HomePage() {
               onSubmit={handleSubmit}
             />
           </div>
-
-          <ModeSwitcher
-            activeMode={activeMode}
-            modes={homeModeList}
-            onChange={setActiveMode}
-          />
-
-          <PromptSuggestions suggestions={currentMode.suggestions} onSelect={setDraft} />
         </section>
 
         <RecommendedUniversities />

@@ -7,12 +7,12 @@ import {
 
 export function RecommendedUniversities() {
   const [recommendedHighlights, setRecommendedHighlights] = useState<ResearchHighlight[]>(() =>
-    getFeaturedResearchHighlights(8),
+    getFeaturedResearchHighlights(9),
   );
   const [selectedHighlight, setSelectedHighlight] = useState<ResearchHighlight | null>(null);
 
   function handleRefreshRecommendations() {
-    setRecommendedHighlights(getFeaturedResearchHighlights(8));
+    setRecommendedHighlights(getFeaturedResearchHighlights(9));
     setSelectedHighlight(null);
   }
 

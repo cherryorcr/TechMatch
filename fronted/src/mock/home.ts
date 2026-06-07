@@ -29,7 +29,7 @@ export type {
 export const defaultHomeMode: HomeModeId = 'internal-industry';
 export const defaultMatchOptions: MatchOptions = {
   matchContent: '学者',
-  paperCount: 5,
+  paperCount: 10,
   showReasoning: false,
 };
 export const matchContentOptions = [
@@ -38,7 +38,7 @@ export const matchContentOptions = [
   { label: '专利', value: '专利' },
   { label: '基金', value: '基金' },
 ] as const satisfies ReadonlyArray<{ label: string; value: MatchContent }>;
-export const paperCountOptions = [5, 10, 20, 30];
+export const paperCountOptions = [10, 20, 30];
 
 type SignalGroup = {
   label: string;
@@ -133,21 +133,21 @@ export const homeModes: Record<HomeModeId, HomeModeConfig> = {
     suggestions: [
       {
         id: 'industry-1',
-        title: '储能需求匹配论文与专利',
+        title: '匹配学者',
         prompt:
-          '我们希望围绕固态电池产业化需求匹配相关论文和专利，请先通过多轮提问明确筛选条件。',
+          '我想围绕企业技术需求匹配相关领域学者，请先追问应用场景、技术指标、合作目标和地域偏好，再推荐合适的专家团队。',
       },
       {
         id: 'industry-2',
-        title: '机器人感知升级',
+        title: '匹配论文',
         prompt:
-          '针对工业机器人感知升级需求，请先追问关键约束，再匹配相关论文和专利。',
+          '我想围绕企业技术需求匹配相关论文，请先追问研究方向、应用场景、时间范围和评价指标，再推荐可参考的论文线索。',
       },
       {
         id: 'industry-3',
-        title: '绿色催化成果转化',
+        title: '匹配专利',
         prompt:
-          '我们想围绕绿色催化工艺寻找可转化成果，请先通过多轮对话澄清业务目标，再匹配论文与专利。',
+          '我想围绕企业技术需求匹配可转化专利，请先追问技术问题、产业场景、成熟度要求和落地约束，再推荐相关专利方向。',
       },
     ],
     previewSections: [
@@ -814,7 +814,7 @@ export function buildAssistantReply(
   if (modeId === 'internal-industry' && userTurnCount === 1) {
     return {
       content:
-        '已收到企业侧的初始需求。为了更准确地匹配论文和专利，我先确认三点：\n1. 你的核心业务场景和技术目标是什么？\n2. 更希望匹配论文、专利，还是两者都要？\n3. 是否有行业、年份、成熟度或地域上的筛选条件？\n\n你可以逐条补充，我会在后续几轮对话里继续收敛。',
+        '已收到企业侧的初始需求。为了更准确地匹配学者、论文和专利，我先确认三点：\n1. 你的核心业务场景和技术目标是什么？\n2. 更希望匹配学者、论文、专利，还是多类结果一起看？\n3. 是否有行业、年份、成熟度或地域上的筛选条件？\n\n你可以逐条补充，我会在后续几轮对话里继续收敛。',
       reasoning: options.showReasoning ? createReasoning(modeId, prompt, options, 1) : undefined,
       summary: `${modeName}已进入企业需求澄清阶段。`,
     };

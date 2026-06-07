@@ -3,21 +3,12 @@ import { Navigate, useParams } from 'react-router-dom';
 import { ApiError, chatApi } from '../api/chatApi';
 import { ChatMarkdown } from '../components/chat/ChatMarkdown';
 import { AttachmentPicker } from '../components/files/AttachmentPicker';
-import { RecommendationPanel } from '../components/home/RecommendationPanel';
 import { useChatSessions } from '../context/ChatSessionsContext';
 import { defaultMatchOptions, matchContentOptions, paperCountOptions } from '../mock/home';
 import type { ChatMessage, MatchContent, MatchOptions } from '../types/chat';
 import { formatFileSize } from '../utils/files';
 
 function getMessageStatusLabel(message: ChatMessage) {
-  if (message.status === 'sending') {
-    return '发送中...';
-  }
-
-  if (message.status === 'streaming') {
-    return '生成中...';
-  }
-
   if (message.status === 'failed') {
     return '发送失败';
   }
@@ -30,14 +21,12 @@ export function ChatPage() {
   const {
     appendMessage,
     error,
-    getRecommendationPanel,
     getSessionById,
     isAppendingMessage,
     isLoadingSession,
     loadSession,
   } = useChatSessions();
   const session = getSessionById(sessionId);
-  const recommendationPanel = getRecommendationPanel(sessionId);
   const [draft, setDraft] = useState('');
   const [matchContent, setMatchContent] = useState<MatchContent>(defaultMatchOptions.matchContent);
   const [paperCount, setPaperCount] = useState(defaultMatchOptions.paperCount);
@@ -90,9 +79,7 @@ export function ChatPage() {
         return;
       }
 
-      setPageError(
-        requestError instanceof Error ? requestError.message : '加载会话详情失败',
-      );
+      setPageError(requestError instanceof Error ? requestError.message : '加载会话详情失败');
     });
 
     return () => {
@@ -117,12 +104,18 @@ export function ChatPage() {
     }
 
     setPageError(null);
+    const filesToUpload = selectedFiles;
+
+    if (!nextPrompt) {
+      setDraft('');
+      setSelectedFiles([]);
+    }
 
     try {
-      setIsUploadingFiles(!nextPrompt && selectedFiles.length > 0);
+      setIsUploadingFiles(!nextPrompt && filesToUpload.length > 0);
       const uploadedFiles =
-        !nextPrompt && selectedFiles.length > 0
-          ? (await chatApi.uploadFiles(selectedFiles)).files
+        !nextPrompt && filesToUpload.length > 0
+          ? (await chatApi.uploadFiles(filesToUpload)).files
           : [];
       await appendMessage({
         files: uploadedFiles,
@@ -134,14 +127,8 @@ export function ChatPage() {
         prompt,
         sessionId: session.id,
       });
-      if (!nextPrompt) {
-        setDraft('');
-        setSelectedFiles([]);
-      }
     } catch (requestError) {
-      setPageError(
-        requestError instanceof Error ? requestError.message : '发送消息失败',
-      );
+      setPageError(requestError instanceof Error ? requestError.message : '发送消息失败');
     } finally {
       setIsUploadingFiles(false);
     }
@@ -191,7 +178,8 @@ export function ChatPage() {
 
   const userTurnCount = session.messages.filter((message) => message.role === 'user').length;
   const activeError = pageError || error;
-  const sending = isAppendingMessage(session.id) || isUploadingFiles;
+  const isWaitingForAnswer = isAppendingMessage(session.id);
+  const sending = isWaitingForAnswer || isUploadingFiles;
 
   return (
     <div className="chat-page">
@@ -202,9 +190,9 @@ export function ChatPage() {
               <span className="eyebrow">多轮匹配对话</span>
               <h1>{session.title}</h1>
               <p>
-                当前模式：{session.modeLabel} · 匹配论文数：Top {session.options.paperCount} ·
+                当前模式：{session.modeLabel} · 匹配数量：Top {session.options.paperCount} ·
                 匹配内容：{session.options.matchContent} ·
-                {session.options.showReasoning ? ' 显示思考过程' : ' 不显示思考过程'} ·
+                {session.options.showReasoning ? ' 展示思考过程' : ' 不展示思考过程'} ·
                 已补充 {Math.max(userTurnCount - 1, 0)} 轮信息
               </p>
             </div>
@@ -229,19 +217,22 @@ export function ChatPage() {
                   <div className="chat-bubble-head">
                     <span className="chat-bubble-meta">{message.meta}</span>
                     {statusLabel ? (
-                      <span
-                        className={
-                          message.status === 'failed'
-                            ? 'chat-bubble-status chat-bubble-status-failed'
-                            : 'chat-bubble-status'
-                        }
-                      >
+                      <span className="chat-bubble-status chat-bubble-status-failed">
                         {statusLabel}
                       </span>
                     ) : null}
                   </div>
 
-                  <ChatMarkdown className="chat-markdown" content={message.content} />
+                  {message.role === 'assistant' && message.status === 'streaming' && !message.content ? (
+                    <div className="assistant-waiting" role="status" aria-live="polite">
+                      <span>等待回答</span>
+                      <i />
+                      <i />
+                      <i />
+                    </div>
+                  ) : (
+                    <ChatMarkdown className="chat-markdown" content={message.content} />
+                  )}
 
                   {message.attachments && message.attachments.length > 0 ? (
                     <div className="message-attachment-list">
@@ -292,36 +283,27 @@ export function ChatPage() {
           >
             <div className="chat-composer-shell">
               <textarea
-                disabled={sending}
-                placeholder="继续补充你的约束、目标、合作偏好，或希望优先匹配的对象..."
+                disabled={isUploadingFiles}
+                placeholder="继续补充约束、目标、合作偏好，或希望优先匹配的对象..."
                 rows={4}
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
               />
 
-              <AttachmentPicker
-                disabled={isAppendingMessage(session.id)}
-                files={selectedFiles}
-                hint="附件会随本轮追问一起发送，用于补充论文、报告或需求材料。"
-                isUploading={isUploadingFiles}
-                label="添加附件"
-                onAddFiles={handleAddFiles}
-                onRemoveFile={handleRemoveFile}
-              />
-
               <div className="chat-composer-options" aria-label="本轮匹配参数">
+                <span className="chat-composer-options-title">本轮参数</span>
                 <label className="home-option-field home-option-stepper">
-                  <span>TopK</span>
+                  <span>推荐数</span>
                   <div className="count-stepper">
                     <button
-                      disabled={sending}
+                      disabled={isUploadingFiles}
                       type="button"
                       onClick={() => handlePaperCountChange(Math.max(1, paperCount - 1))}
                     >
                       -
                     </button>
                     <input
-                      disabled={sending}
+                      disabled={isUploadingFiles}
                       min={1}
                       step={1}
                       type="number"
@@ -329,7 +311,7 @@ export function ChatPage() {
                       onChange={(event) => handlePaperCountChange(Number(event.target.value))}
                     />
                     <button
-                      disabled={sending}
+                      disabled={isUploadingFiles}
                       type="button"
                       onClick={() => handlePaperCountChange(paperCount + 1)}
                     >
@@ -338,26 +320,28 @@ export function ChatPage() {
                   </div>
                 </label>
 
-                <label className="home-option-field home-option-content">
-                  <span>匹配内容</span>
-                  <select
-                    className="match-content-select"
-                    disabled={sending}
-                    value={matchContent}
-                    onChange={(event) => setMatchContent(event.target.value as MatchContent)}
-                  >
-                    {matchContentOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                {session.modeId !== 'tech-recommendation' ? (
+                  <label className="home-option-field home-option-content">
+                    <span>匹配内容</span>
+                    <select
+                      className="match-content-select"
+                      disabled={isUploadingFiles}
+                      value={matchContent}
+                      onChange={(event) => setMatchContent(event.target.value as MatchContent)}
+                    >
+                      {matchContentOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
 
                 <label className="home-option-toggle">
                   <input
                     checked={showReasoning}
-                    disabled={sending}
+                    disabled={isUploadingFiles}
                     type="checkbox"
                     onChange={(event) => setShowReasoning(event.target.checked)}
                   />
@@ -369,7 +353,7 @@ export function ChatPage() {
                     <button
                       key={option}
                       type="button"
-                      disabled={sending}
+                      disabled={isUploadingFiles}
                       className={paperCount === option ? 'paper-preset paper-preset-active' : 'paper-preset'}
                       onClick={() => handlePaperCountChange(option)}
                     >
@@ -379,31 +363,25 @@ export function ChatPage() {
                 </div>
               </div>
 
+              <AttachmentPicker
+                disabled={isAppendingMessage(session.id)}
+                files={selectedFiles}
+                hint="附件会随本轮追问一起发送，用于补充论文、报告或需求材料。"
+                isUploading={isUploadingFiles}
+                label="添加附件"
+                onAddFiles={handleAddFiles}
+                onRemoveFile={handleRemoveFile}
+              />
+
               <div className="chat-composer-footer">
-                <span>
-                  这是一个多轮对话式匹配流程，补充得越具体，右侧推荐会越贴近当前需求。
-                </span>
+                <span />
                 <button disabled={sending || !draft.trim()} type="submit">
-                  {sending ? '发送中...' : '发送'}
+                  发送
                 </button>
               </div>
             </div>
           </form>
         </div>
-
-        {recommendationPanel ? (
-          <RecommendationPanel
-            modeLabel={session.modeLabel}
-            panel={recommendationPanel}
-          />
-        ) : (
-          <aside className="recommendation-column">
-            <section className="panel page-status-card">
-              <strong>正在加载推荐面板...</strong>
-              <p>会话详情返回后，这里会展示后端生成的推荐结果和追问建议。</p>
-            </section>
-          </aside>
-        )}
       </div>
     </div>
   );

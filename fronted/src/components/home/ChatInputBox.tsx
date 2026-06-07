@@ -12,6 +12,7 @@ interface ChatInputBoxProps {
   isUploadingFiles?: boolean;
   matchContent: MatchContent;
   paperCount: number;
+  showMatchContent?: boolean;
   showReasoning: boolean;
   onChange: (value: string) => void;
   onAddFiles: (files: File[]) => void;
@@ -31,6 +32,7 @@ export function ChatInputBox({
   isUploadingFiles = false,
   matchContent,
   paperCount,
+  showMatchContent = true,
   showReasoning,
   onChange,
   onAddFiles,
@@ -70,13 +72,15 @@ export function ChatInputBox({
           onChange={(event) => onChange(event.target.value)}
         />
 
-        <AttachmentPicker
-          disabled={disabled || isUploadingFiles}
-          files={files}
-          isUploading={isUploadingFiles}
-          onAddFiles={onAddFiles}
-          onRemoveFile={onRemoveFile}
-        />
+        {false ? (
+          <AttachmentPicker
+            disabled={disabled || isUploadingFiles}
+            files={files}
+            isUploading={isUploadingFiles}
+            onAddFiles={onAddFiles}
+            onRemoveFile={onRemoveFile}
+          />
+        ) : null}
 
         <div className="chat-input-footer">
           <span className="chat-input-hint">{inputHint}</span>
@@ -91,7 +95,7 @@ export function ChatInputBox({
 
         <div className="home-options-row">
           <label className="home-option-field home-option-stepper">
-            <span>匹配论文数</span>
+            <span>推荐数</span>
             <div className="count-stepper">
               <button
                 disabled={disabled || isUploadingFiles}
@@ -118,21 +122,23 @@ export function ChatInputBox({
             </div>
           </label>
 
-          <label className="home-option-field home-option-content">
-            <span>匹配内容</span>
-            <select
-              className="match-content-select"
-              disabled={disabled || isUploadingFiles}
-              value={matchContent}
-              onChange={(event) => onMatchContentChange(event.target.value as MatchContent)}
-            >
-              {matchContentOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          {showMatchContent ? (
+            <label className="home-option-field home-option-content">
+              <span>匹配内容</span>
+              <select
+                className="match-content-select"
+                disabled={disabled || isUploadingFiles}
+                value={matchContent}
+                onChange={(event) => onMatchContentChange(event.target.value as MatchContent)}
+              >
+                {matchContentOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
 
           <label className="home-option-toggle">
             <input
