@@ -1,0 +1,11 @@
+.git
+.codex-push
+**/__pycache__/
+**/*.pyc
+fronted/node_modules/
+fronted/dist/
+fronted/vite-dev-*.log
+fronted/vite-dev-*.err
+*.pdf
+uploads/
+logs/

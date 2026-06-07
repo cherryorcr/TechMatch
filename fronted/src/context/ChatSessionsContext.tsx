@@ -77,7 +77,6 @@ function createOptimisticUserMessage(
     attachments,
     content: prompt,
     meta,
-    status: 'sending',
   };
 }
 
